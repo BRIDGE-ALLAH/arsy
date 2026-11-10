@@ -41,7 +41,7 @@ queue:
   kind: Postgres
   
   # Postgres connection URI
-  uri: <%= get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:5432/arsy-control-plane_development") %>
+  uri: <%= get_env(name="QUEUE_URL") %>
   # Dangerously flush all data in the queue table on startup. dangerous operation, make sure that you using this flag only on dev environments or test mode
   dangerously_flush: false
   
@@ -80,7 +80,7 @@ mailer:
 # Database Configuration
 database:
   # Database connection URI
-  uri: <%= get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:5432/arsy-control-plane_development") %>
+  uri: <%= get_env(name="DATABASE_URL") %>
   # When enabled, the sql query will be logged.
   enable_logging: <%= get_env(name="DB_LOGGING", default="false") %>
   # Set the timeout duration when acquiring a connection.
@@ -105,7 +105,7 @@ auth:
   # JWT authentication
   jwt:
     # Secret key for token generation and verification
-    secret: jSUqKkMjzdeMeECivmj8
+    secret: <%= get_env(name="JWT_SECRET") %>
     # Token expiration time in seconds
     expiration: 604800 # 7 days
     # Where to read the token from. Omitted => `Authorization: Bearer <token>`.
