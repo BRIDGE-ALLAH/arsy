@@ -69,11 +69,20 @@ impl fmt::Display for DomainError {
                 formatter,
                 "provider '{provider}' does not support capability '{capability}'"
             ),
-            Self::ProviderUnavailable { provider, retryable } => {
-                write!(formatter, "provider '{provider}' is unavailable (retryable: {retryable})")
+            Self::ProviderUnavailable {
+                provider,
+                retryable,
+            } => {
+                write!(
+                    formatter,
+                    "provider '{provider}' is unavailable (retryable: {retryable})"
+                )
             }
             Self::OperationNotRecoverable { operation_id } => {
-                write!(formatter, "operation '{operation_id}' cannot be recovered automatically")
+                write!(
+                    formatter,
+                    "operation '{operation_id}' cannot be recovered automatically"
+                )
             }
         }
     }
