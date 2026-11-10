@@ -12,7 +12,11 @@ async fn monitoring_endpoints_are_mounted() {
         );
 
         let health = request.get("/_health").await;
-        assert_eq!(health.status_code(), 200, "health endpoint should be healthy");
+        assert_eq!(
+            health.status_code(),
+            200,
+            "health endpoint should be healthy"
+        );
 
         let readiness = request.get("/_readiness").await;
         assert_eq!(
