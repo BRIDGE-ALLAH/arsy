@@ -45,6 +45,14 @@ impl Hooks for App {
         Ok(vec![])
     }
 
+    fn middlewares(ctx: &AppContext) -> Vec<Box<dyn loco_rs::controller::middleware::MiddlewareLayer>> {
+        let mut stack = loco_rs::controller::middleware::default_middleware_stack(ctx);
+        // Keep Loco's request_id middleware: it sanitizes/generates x-request-id
+        // before the outer normalizer builds an error envelope from the response.
+        stack.push(Box::new(crate::middlewares::api_errors::ApiErrorMiddleware));
+        stack
+    }
+
     fn routes(_ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::auth::routes())
