@@ -1,4 +1,9 @@
-use arsy_control_plane::{app::App, models::users};
+use arsy_control_plane::{
+    app::App,
+    models::{_entities::auth_sessions, users},
+};
+use chrono::{Duration, Utc};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 use insta::{assert_debug_snapshot, with_settings};
 use loco_rs::testing::prelude::*;
 use serial_test::serial;
@@ -315,6 +320,42 @@ async fn can_reset_password() {
         // }, {
         //     assert_debug_snapshot!(deliveries.messages);
         // });
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn protected_current_route_rejects_missing_credentials() {
+    request::<App, _, _>(|request, _ctx| async move {
+        let response = request.get("/api/v1/auth/current").await;
+        assert_eq!(response.status_code(), 401);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn protected_current_route_rejects_expired_persisted_session() {
+    request::<App, _, _>(|request, ctx| async move {
+        let user = prepare_data::init_user_login(&request, &ctx).await;
+        let session = auth_sessions::Entity::find()
+            .filter(auth_sessions::Column::UserId.eq(user.user.id))
+            .one(&ctx.db)
+            .await
+            .expect("query session")
+            .expect("login created a session");
+
+        let mut active: auth_sessions::ActiveModel = session.into();
+        active.expires_at = Set(Utc::now().fixed_offset() - Duration::minutes(1));
+        active.update(&ctx.db).await.expect("expire persisted session");
+
+        let (key, value) = prepare_data::auth_header(&user.token);
+        let response = request
+            .get("/api/v1/auth/current")
+            .add_header(key, value)
+            .await;
+        assert_eq!(response.status_code(), 401);
     })
     .await;
 }
