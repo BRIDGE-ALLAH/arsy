@@ -27,7 +27,7 @@ async fn ready(State(ctx): State<AppContext>) -> Result<Response> {
 }
 
 pub fn routes() -> Routes {
-    Routes::new().prefix("/api/health").add("/ready", get(ready))
+    Routes::new().prefix("/api/v1/health").add("/ready", get(ready))
 }
 
 #[cfg(test)]

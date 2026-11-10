@@ -70,11 +70,15 @@ After generation:
 - Commit Cargo.lock for the generated application.
 - Add a health endpoint check and an initial migration before building domain modules.
 
-## 3. Frontend
+## 3. API contract
+
+The versioning policy and canonical OpenAPI schema live in [docs/api/README.md](api/README.md). After changing an API route or request/response shape, update `docs/api/source/openapi.yaml`, regenerate with `bash scripts/generate-openapi.sh --write`, and run the API-contract workflow's Redocly lint command.
+
+## 4. Frontend
 
 The initial frontend applications are planned under frontend/apps. Use Next.js App Router and TypeScript. Keep the API client separate from UI components and generate types from OpenAPI once the Control Plane contract stabilizes.
 
-## 4. Stop local dependencies
+## 5. Stop local dependencies
 
 ```bash
 ./scripts/dev-down.sh

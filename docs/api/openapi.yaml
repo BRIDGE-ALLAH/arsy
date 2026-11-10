@@ -1,0 +1,308 @@
+openapi: 3.1.0
+info:
+  title: ARSY Control Plane API
+  version: 1.0.0
+  summary: Versioned REST contract for the ARSY hybrid cloud control plane.
+  description: |
+    This contract contains routes that are implemented in the current repository.
+    It is the source for generated API reference artifacts and future client types.
+servers:
+  - url: http://127.0.0.1:5150
+    description: Local development only; production deployments configure their own server URL.
+tags:
+  - name: Monitoring
+  - name: Health
+  - name: Authentication
+paths:
+  /_ping:
+    get:
+      tags: [Monitoring]
+      operationId: livenessPing
+      summary: Check that the Control Plane HTTP process responds
+      description: Loco built-in liveness endpoint. Kept outside the versioned application API.
+      responses:
+        "200":
+          description: Process responds.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    const: true
+  /api/v1/health/ready:
+    get:
+      tags: [Health]
+      operationId: getReadiness
+      summary: Check required database readiness
+      description: Returns ready only when PostgreSQL responds to a lightweight query. Internal dependency errors are not exposed.
+      responses:
+        "200":
+          description: Required database is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Readiness"
+              example:
+                status: ready
+        "503":
+          description: Required database is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Readiness"
+              example:
+                status: not_ready
+  /api/v1/auth/register:
+    post:
+      tags: [Authentication]
+      operationId: registerUser
+      summary: Register a user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Registration request was accepted by the current auth handler.
+  /api/v1/auth/verify/{token}:
+    get:
+      tags: [Authentication]
+      operationId: verifyUserEmail
+      summary: Verify a registration email
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Email is verified or was already verified.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      operationId: loginUser
+      summary: Authenticate with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/forgot:
+    post:
+      tags: [Authentication]
+      operationId: requestPasswordReset
+      summary: Request password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailRequest"
+      responses:
+        "200":
+          description: Request accepted without disclosing account existence.
+  /api/v1/auth/reset:
+    post:
+      tags: [Authentication]
+      operationId: resetPassword
+      summary: Reset a password using a valid reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Reset request handled.
+  /api/v1/auth/current:
+    get:
+      tags: [Authentication]
+      operationId: getCurrentUser
+      summary: Get the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/magic-link:
+    post:
+      tags: [Authentication]
+      operationId: requestMagicLink
+      summary: Request a passwordless sign-in link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailRequest"
+      responses:
+        "200":
+          description: Request accepted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/auth/magic-link/{token}:
+    get:
+      tags: [Authentication]
+      operationId: verifyMagicLink
+      summary: Exchange a valid magic link for a JWT
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/resend-verification-mail:
+    post:
+      tags: [Authentication]
+      operationId: resendVerificationEmail
+      summary: Resend an account verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailRequest"
+      responses:
+        "200":
+          description: Request handled without disclosing account state.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Unauthorized:
+      description: Authentication is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    BadRequest:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+  schemas:
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+    EmailRequest:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+    LoginResponse:
+      type: object
+      required: [token, pid, name, is_verified]
+      properties:
+        token:
+          type: string
+          description: Bearer JWT. Store it securely; do not log it.
+        pid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        is_verified:
+          type: boolean
+    CurrentUser:
+      type: object
+      required: [pid, name, email]
+      properties:
+        pid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    Readiness:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]
+    ErrorEnvelope:
+      type: object
+      required: [error, description]
+      properties:
+        error:
+          type: string
+        description:
+          type: string
