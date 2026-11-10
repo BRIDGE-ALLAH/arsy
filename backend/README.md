@@ -33,7 +33,7 @@ Login and magic-link exchange issue JWTs backed by PostgreSQL session rows. Logo
 ## Health endpoints
 
 - `GET /_ping`: Loco built-in liveness endpoint; reports that the HTTP process is responsive.
-- `GET /api/health/ready`: runs a lightweight `SELECT 1` against PostgreSQL. Returns `200 { "status": "ready" }` only when the required database responds, or `503 { "status": "not_ready" }` without exposing dependency details.
+- `GET /api/v1/health/ready`: runs a lightweight `SELECT 1` against PostgreSQL. Returns `200 { "status": "ready" }` only when the required database responds, or `503 { "status": "not_ready" }` without exposing dependency details.
 
 ## Rules
 
