@@ -10,7 +10,12 @@ if ! command -v loco >/dev/null 2>&1; then
 fi
 
 app_dir="backend/apps/arsy-control-plane"
-mkdir -p "$(dirname "$app_dir")"
+parent_dir="$(dirname "$app_dir")"
+mkdir -p "$parent_dir"
+test -d "$parent_dir"
+printf 'Generation working directory: %s\n' "$PWD"
+printf 'Generation parent directory: %s\n' "$parent_dir"
+ls -la "$parent_dir"
 if [[ -e "$app_dir" ]]; then
   echo "Refusing to overwrite existing app directory: $app_dir" >&2
   exit 1
@@ -18,7 +23,7 @@ fi
 
 loco new \
   --name arsy-control-plane \
-  --path "$app_dir" \
+  --path "$parent_dir" \
   --db postgres \
   --bg queue-postgres \
   --assets none \
