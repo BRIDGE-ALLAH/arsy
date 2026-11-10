@@ -9,7 +9,7 @@ The backend is Rust. The first application is the Loco.rs Control Plane API.
 
 ## Generate the Control Plane
 
-From the repository root run `./scripts/bootstrap-backend.sh`. The script invokes the official Loco generator with explicit, non-interactive options for PostgreSQL persistence, PostgreSQL-backed jobs, and a headless API.
+From the repository root run `bash scripts/bootstrap-backend.sh`. The script invokes the official Loco generator with explicit, non-interactive options for PostgreSQL persistence, PostgreSQL-backed jobs, and a headless API.
 
 After generation, set the development database URI to match credentials created by `scripts/dev-up.sh`. Never copy development credentials into production.
 
