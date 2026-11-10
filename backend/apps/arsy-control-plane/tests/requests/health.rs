@@ -1,7 +1,9 @@
 use arsy_control_plane::app::App;
 use loco_rs::testing::prelude::*;
+use serial_test::serial;
 
 #[tokio::test]
+#[serial]
 async fn monitoring_endpoints_are_mounted() {
     request::<App, _, _>(|request, _ctx| async move {
         let ping = request.get("/_ping").await;
