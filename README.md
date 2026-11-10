@@ -51,6 +51,10 @@ Stop the dependency container without deleting its data:
 
 See [Development Guide](docs/DEVELOPMENT.md) before generating the Loco application.
 
+## Contributing and reporting work
+
+Read [AGENTS.md](AGENTS.md) before contributing. Use the [GitHub issue form chooser](https://github.com/BRIDGE-ALLAH/arsy/issues/new/choose) for implementation tasks, bug reports, and architecture decisions.
+
 ## Work tracking
 
 The phased implementation backlog is maintained in [GitHub issue #1](https://github.com/BRIDGE-ALLAH/arsy/issues/1). Work one dependency-ready child issue per pull request; each issue includes its own specification, design rules, acceptance checklist, test plan, and out-of-scope boundary.
