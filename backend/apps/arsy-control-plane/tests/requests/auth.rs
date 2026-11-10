@@ -235,6 +235,14 @@ async fn can_reset_password() {
     request::<App, _, _>(|request, ctx| async move {
         let login_data = prepare_data::init_user_login(&request, &ctx).await;
 
+        let (old_auth_key, old_auth_value) =
+            prepare_data::auth_header(&login_data.token);
+        let old_session = request
+            .get("/api/v1/auth/current")
+            .add_header(old_auth_key.clone(), old_auth_value.clone())
+            .await;
+        assert_eq!(old_session.status_code(), 200);
+
         let forgot_payload = serde_json::json!({
             "email": login_data.user.email,
         });
@@ -277,6 +285,12 @@ async fn can_reset_password() {
 
         assert!(user.reset_token.is_none());
         assert!(user.reset_sent_at.is_none());
+
+        let invalidated_session = request
+            .get("/api/v1/auth/current")
+            .add_header(old_auth_key, old_auth_value)
+            .await;
+        assert_eq!(invalidated_session.status_code(), 401);
 
         assert_debug_snapshot!(reset_response.text());
 
@@ -330,6 +344,34 @@ async fn can_get_current_user() {
         }, {
             assert_debug_snapshot!((response.status_code(), response.text()));
         });
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn logout_revokes_the_persisted_session() {
+    request::<App, _, _>(|request, ctx| async move {
+        let user = prepare_data::init_user_login(&request, &ctx).await;
+        let (auth_key, auth_value) = prepare_data::auth_header(&user.token);
+
+        let before_logout = request
+            .get("/api/v1/auth/current")
+            .add_header(auth_key.clone(), auth_value.clone())
+            .await;
+        assert_eq!(before_logout.status_code(), 200);
+
+        let logout_response = request
+            .post("/api/v1/auth/logout")
+            .add_header(auth_key.clone(), auth_value.clone())
+            .await;
+        assert_eq!(logout_response.status_code(), 200);
+
+        let after_logout = request
+            .get("/api/v1/auth/current")
+            .add_header(auth_key, auth_value)
+            .await;
+        assert_eq!(after_logout.status_code(), 401);
     })
     .await;
 }
