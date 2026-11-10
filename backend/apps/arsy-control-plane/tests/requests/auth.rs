@@ -29,7 +29,7 @@ async fn can_register() {
             "password": "12341234"
         });
 
-        let response = request.post("/api/auth/register").json(&payload).await;
+        let response = request.post("/api/v1/auth/register").json(&payload).await;
         assert_eq!(
             response.status_code(),
             200,
@@ -89,7 +89,7 @@ async fn can_login_with_verify(test_name: &str, password: &str) {
 
         //Creating a new user
         let register_response = request
-            .post("/api/auth/register")
+            .post("/api/v1/auth/register")
             .json(&register_payload)
             .await;
 
@@ -104,12 +104,12 @@ async fn can_login_with_verify(test_name: &str, password: &str) {
             .email_verification_token
             .expect("Email verification token should be generated");
         request
-            .get(&format!("/api/auth/verify/{email_verification_token}"))
+            .get(&format!("/api/v1/auth/verify/{email_verification_token}"))
             .await;
 
         //verify user request
         let response = request
-            .post("/api/auth/login")
+            .post("/api/v1/auth/login")
             .json(&serde_json::json!({
                 "email": email,
                 "password": password
@@ -144,7 +144,7 @@ async fn login_with_un_existing_email() {
     request::<App, _, _>(|request, _ctx| async move {
 
         let login_response = request
-            .post("/api/auth/login")
+            .post("/api/v1/auth/login")
             .json(&serde_json::json!({
                 "email": "un_existing@loco.rs",
                 "password":  "1234"
@@ -173,7 +173,7 @@ async fn can_login_without_verify() {
 
         //Creating a new user
         let register_response = request
-            .post("/api/auth/register")
+            .post("/api/v1/auth/register")
             .json(&register_payload)
             .await;
 
@@ -185,7 +185,7 @@ async fn can_login_without_verify() {
 
         //verify user request
         let login_response = request
-            .post("/api/auth/login")
+            .post("/api/v1/auth/login")
             .json(&serde_json::json!({
                 "email": email,
                 "password": password
@@ -213,7 +213,7 @@ async fn invalid_verification_token() {
     configure_insta!();
 
     request::<App, _, _>(|request, _ctx| async move {
-        let response = request.get("/api/auth/verify/invalid-token").await;
+        let response = request.get("/api/v1/auth/verify/invalid-token").await;
 
         assert_eq!(response.status_code(), 401, "Verify request should reject");
     })
@@ -231,7 +231,7 @@ async fn can_reset_password() {
         let forgot_payload = serde_json::json!({
             "email": login_data.user.email,
         });
-        let forget_response = request.post("/api/auth/forgot").json(&forgot_payload).await;
+        let forget_response = request.post("/api/v1/auth/forgot").json(&forgot_payload).await;
         assert_eq!(
             forget_response.status_code(),
             200,
@@ -257,7 +257,7 @@ async fn can_reset_password() {
             "password": new_password,
         });
 
-        let reset_response = request.post("/api/auth/reset").json(&reset_payload).await;
+        let reset_response = request.post("/api/v1/auth/reset").json(&reset_payload).await;
         assert_eq!(
             reset_response.status_code(),
             200,
@@ -274,7 +274,7 @@ async fn can_reset_password() {
         assert_debug_snapshot!(reset_response.text());
 
         let login_response = request
-            .post("/api/auth/login")
+            .post("/api/v1/auth/login")
             .json(&serde_json::json!({
                 "email": user.email,
                 "password": new_password
@@ -308,7 +308,7 @@ async fn can_get_current_user() {
 
         let (auth_key, auth_value) = prepare_data::auth_header(&user.token);
         let response = request
-            .get("/api/auth/current")
+            .get("/api/v1/auth/current")
             .add_header(auth_key, auth_value)
             .await;
 
@@ -337,7 +337,7 @@ async fn can_auth_with_magic_link() {
         let payload = serde_json::json!({
             "email": "user1@example.com",
         });
-        let response = request.post("/api/auth/magic-link").json(&payload).await;
+        let response = request.post("/api/v1/auth/magic-link").json(&payload).await;
         assert_eq!(
             response.status_code(),
             200,
@@ -366,7 +366,7 @@ async fn can_auth_with_magic_link() {
             .magic_link_token
             .expect("Magic link token should be generated");
         let magic_link_response = request
-            .get(&format!("/api/auth/magic-link/{magic_link_token}"))
+            .get(&format!("/api/v1/auth/magic-link/{magic_link_token}"))
             .await;
         assert_eq!(
             magic_link_response.status_code(),
@@ -392,7 +392,7 @@ async fn can_reject_invalid_email() {
         let payload = serde_json::json!({
             "email": invalid_email,
         });
-        let response = request.post("/api/auth/magic-link").json(&payload).await;
+        let response = request.post("/api/v1/auth/magic-link").json(&payload).await;
         assert_eq!(
             response.status_code(),
             400,
@@ -409,7 +409,7 @@ async fn can_reject_invalid_magic_link_token() {
     request::<App, _, _>(|request, ctx| async move {
         seed::<App>(&ctx).await.unwrap();
 
-        let magic_link_response = request.get("/api/auth/magic-link/invalid-token").await;
+        let magic_link_response = request.get("/api/v1/auth/magic-link/invalid-token").await;
         assert_eq!(
             magic_link_response.status_code(),
             401,
@@ -432,7 +432,7 @@ async fn can_resend_verification_email() {
             "password": "12341234"
         });
 
-        let response = request.post("/api/auth/register").json(&payload).await;
+        let response = request.post("/api/v1/auth/register").json(&payload).await;
         assert_eq!(
             response.status_code(),
             200,
@@ -442,7 +442,7 @@ async fn can_resend_verification_email() {
         let resend_payload = serde_json::json!({ "email": email });
 
         let resend_response = request
-            .post("/api/auth/resend-verification-mail")
+            .post("/api/v1/auth/resend-verification-mail")
             .json(&resend_payload)
             .await;
 
@@ -486,19 +486,19 @@ async fn cannot_resend_email_if_already_verified() {
             "password": "12341234"
         });
 
-        request.post("/api/auth/register").json(&payload).await;
+        request.post("/api/v1/auth/register").json(&payload).await;
 
         // Verify user
         let user = users::Model::find_by_email(&ctx.db, email).await.unwrap();
         if let Some(token) = user.email_verification_token.clone() {
-            request.get(&format!("/api/auth/verify/{token}")).await;
+            request.get(&format!("/api/v1/auth/verify/{token}")).await;
         }
 
         // Try resending verification email
         let resend_payload = serde_json::json!({ "email": email });
 
         let resend_response = request
-            .post("/api/auth/resend-verification-mail")
+            .post("/api/v1/auth/resend-verification-mail")
             .json(&resend_payload)
             .await;
 
