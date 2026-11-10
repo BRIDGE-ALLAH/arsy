@@ -55,7 +55,7 @@ The public landing page runs with `pnpm dev:website`. These applications are sca
 Install the pinned Rust toolchain using rustup, then run:
 
 ~~~bash
-./scripts/bootstrap-backend.sh
+bash scripts/bootstrap-backend.sh
 ~~~
 
 The script generates the Loco Control Plane with PostgreSQL persistence and a PostgreSQL-backed worker queue. Review the generated configuration before connecting it to anything other than a local development database.
