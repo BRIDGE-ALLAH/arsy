@@ -67,7 +67,7 @@ After generation:
 - Review generated Cargo.toml and config files.
 - Confirm the PostgreSQL connection uses local development values.
 - Keep queue mode configured for PostgreSQL for durable job behavior.
-- Commit Cargo.lock for the generated application.
+- The backend workspace owns one lockfile at `backend/Cargo.lock`; do not keep a second lockfile under the app member.
 - Add a health endpoint check and an initial migration before building domain modules.
 
 ## 3. Frontend

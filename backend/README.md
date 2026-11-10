@@ -1,36 +1,38 @@
 # ARSY Backend
 
-The backend is a Rust codebase. The first application is the Loco.rs Control Plane API.
+The backend is a Cargo workspace. The first member is the Loco.rs PostgreSQL Control Plane.
 
-## Scaffold the Control Plane
+## Workspace layout
 
-Prerequisites: stable Rust toolchain, Cargo, PostgreSQL (provided locally through scripts/dev-up.sh), and the Loco/SeaORM CLIs.
+- `Cargo.toml`: workspace root and shared dependency declarations.
+- `Cargo.lock`: the single lockfile for every backend workspace member.
+- `apps/arsy-control-plane`: Loco HTTP API and PostgreSQL-backed worker.
+- `apps/arsy-control-plane/migration`: SeaORM migrations, included by the app.
 
-From the repository root:
+## Common commands
 
-~~~bash
-cargo install loco
-cargo install sea-orm-cli
-loco new \
-  --path backend/apps/arsy-control-plane \
-  --name arsy_control_plane \
-  --db postgres \
-  --bg queue-postgres \
-  --assets none \
-  --allow-in-git-repo
-~~~
+Run these commands from the repository root:
 
-The command uses Loco's official generator for a database-backed JSON API and PostgreSQL-backed durable worker queue. Review the generated configuration before connecting it to any non-local database.
+```bash
+cargo metadata --manifest-path backend/Cargo.toml --format-version 1 --no-deps
+cargo fmt --manifest-path backend/Cargo.toml --all -- --check
+cargo check --manifest-path backend/Cargo.toml --workspace
+cargo test --manifest-path backend/Cargo.toml --workspace
+```
+
+Run the API from the application directory after starting PostgreSQL and exporting the local development environment:
+
+```bash
+cd backend/apps/arsy-control-plane
+cargo loco start
+```
+
+See [Development Guide](../docs/DEVELOPMENT.md) for environment setup.
 
 ## Rules
 
-- Keep controllers thin.
-- Place business use cases outside HTTP handlers.
+- Keep controllers thin and domain behavior on Loco models.
 - Do not put provider SDK calls directly in controllers.
 - Persist operations before dispatching external side effects.
 - Keep secrets out of logs and source control.
 - Add migrations and tests with each domain feature.
-
-## Status
-
-The app scaffold has not yet been generated or compiled in this repository. The command above is the Phase 0 implementation entry point.
