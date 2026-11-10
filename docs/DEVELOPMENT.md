@@ -48,7 +48,7 @@ cd arsy
 ./scripts/dev-up.sh
 ```
 
-The script creates a local .env with a random PostgreSQL password if one does not already exist. The file is ignored by Git and created with restrictive permissions.
+The script creates or repairs a local .env with random PostgreSQL and JWT secrets. Existing non-placeholder values are preserved. The file is ignored by Git and has mode 0600.
 
 PostgreSQL is bound to 127.0.0.1:5432. The local database defaults to:
 
@@ -57,7 +57,7 @@ PostgreSQL is bound to 127.0.0.1:5432. The local database defaults to:
 - Host: 127.0.0.1
 - Port: 5432
 
-The password is stored in the local .env file. Do not paste it into issues or logs.
+The database password and JWT secret are stored in the local .env file. Do not paste them into issues or logs.
 
 ## 2. Generate the Loco control plane
 
