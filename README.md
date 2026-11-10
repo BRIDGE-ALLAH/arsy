@@ -40,7 +40,7 @@ Stop the dependency container without deleting its data:
 
 ## Start the frontend
 
-Requirements: Node.js 26 and pnpm 10.20.0.
+Requirements: Node.js 26 and pnpm 12.19.0.
 
 ~~~bash
 cd frontend
