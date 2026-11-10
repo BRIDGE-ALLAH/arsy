@@ -1,2 +1,13 @@
 packages:
   - "apps/*"
+
+# Keep the one-day quarantine for new dependency releases.
+# These exact Next.js 16.4.6 packages were released just before the quarantine
+# cutoff when this pinned lockfile was generated; only these exact versions are
+# exempt. Their transitive dependencies remain subject to the age policy.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - next@16.4.6
+  - eslint-config-next@16.4.6
+  - '@next/env@16.4.6'
+  - '@next/eslint-plugin-next@16.4.6'
