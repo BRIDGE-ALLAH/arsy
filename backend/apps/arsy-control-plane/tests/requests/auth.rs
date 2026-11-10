@@ -152,7 +152,14 @@ async fn login_with_un_existing_email() {
             .await;
 
         assert_eq!(login_response.status_code(), 401, "Login request should return 401");
-        login_response.assert_json(&serde_json::json!({"error": "unauthorized", "description": "You do not have permission to access this resource"}));
+        let body: serde_json::Value =
+            serde_json::from_str(&login_response.text()).expect("normalized error is JSON");
+        assert_eq!(body["error"]["code"], "unauthorized");
+        assert_eq!(
+            body["error"]["message"],
+            "Authentication is required or the credentials are invalid."
+        );
+        assert!(body["error"]["request_id"].as_str().is_some());
     })
     .await;
 }
