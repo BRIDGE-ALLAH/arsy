@@ -20,6 +20,7 @@ jobs:
           bash -n scripts/dev-up.sh
           bash -n scripts/dev-down.sh
           bash -n scripts/bootstrap-backend.sh
+          bash -n scripts/dev-backend.sh
       - name: Validate development Compose configuration
         run: |
           cp .env.example .env
@@ -50,8 +51,24 @@ jobs:
         run: pnpm build
 
   backend-template:
-    name: Generate and validate Loco Control Plane template
+    name: Generate, lint, and test Loco Control Plane
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: loco
+          POSTGRES_PASSWORD: loco
+          POSTGRES_DB: arsy-control-plane_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U loco -d arsy-control-plane_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://loco:loco@127.0.0.1:5432/arsy-control-plane_test
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
@@ -64,4 +81,10 @@ jobs:
       - name: Check Rust formatting
         run: cargo fmt --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all -- --check
       - name: Compile backend
-        run: cargo check --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+        run: cargo check --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+      - name: Clippy
+        run: cargo clippy --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all-targets -- -D warnings
+      - name: Build backend
+        run: cargo build --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+      - name: Run backend tests
+        run: cargo test --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
