@@ -29,9 +29,7 @@ pub async fn init_user_login(request: &TestServer, ctx: &AppContext) -> LoggedIn
     let token = user
         .email_verification_token
         .expect("verification token must be present after registration");
-    request
-        .get(&format!("/api/auth/verify/{token}"))
-        .await;
+    request.get(&format!("/api/auth/verify/{token}")).await;
 
     let response = request
         .post("/api/auth/login")
