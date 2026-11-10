@@ -1,36 +1,25 @@
 # ARSY Backend
 
-The backend is a Rust codebase. The first application is the Loco.rs Control Plane API.
+The backend is Rust. The first application is the Loco.rs Control Plane API.
 
-## Scaffold the Control Plane
+## Pinned toolchain
+- Rust 1.99.1 is pinned in the repository-level `rust-toolchain.toml`.
+- Loco generator 1.3.1 and SeaORM CLI 2.0.0 are installed by `scripts/bootstrap-backend.sh`.
+- PostgreSQL is the source of truth; the app uses Loco's PostgreSQL durable background queue.
 
-Prerequisites: stable Rust toolchain, Cargo, PostgreSQL (provided locally through scripts/dev-up.sh), and the Loco/SeaORM CLIs.
+## Generate the Control Plane
 
-From the repository root:
+From the repository root run `./scripts/bootstrap-backend.sh`. The script invokes the official Loco generator with explicit, non-interactive options for PostgreSQL persistence, PostgreSQL-backed jobs, and a headless API.
 
-~~~bash
-cargo install loco
-cargo install sea-orm-cli
-loco new \
-  --path backend/apps/arsy-control-plane \
-  --name arsy_control_plane \
-  --db postgres \
-  --bg queue-postgres \
-  --assets none \
-  --allow-in-git-repo
-~~~
-
-The command uses Loco's official generator for a database-backed JSON API and PostgreSQL-backed durable worker queue. Review the generated configuration before connecting it to any non-local database.
+After generation, set the development database URI to match credentials created by `scripts/dev-up.sh`. Never copy development credentials into production.
 
 ## Rules
-
-- Keep controllers thin.
-- Place business use cases outside HTTP handlers.
-- Do not put provider SDK calls directly in controllers.
-- Persist operations before dispatching external side effects.
+- Keep controllers thin and business use cases outside HTTP handlers.
+- Do not call provider SDKs directly from controllers.
+- Persist operations before external side effects.
 - Keep secrets out of logs and source control.
 - Add migrations and tests with each domain feature.
 
 ## Status
 
-The app scaffold has not yet been generated or compiled in this repository. The command above is the Phase 0 implementation entry point.
+The pinned generator bootstrap is committed. The generated Loco application, compiled API, OpenAPI contract, and runtime health checks still require source generation, review, and verified tests; they are not marked complete yet.
