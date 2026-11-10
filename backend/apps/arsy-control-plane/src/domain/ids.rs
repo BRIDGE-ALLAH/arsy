@@ -1,6 +1,6 @@
 use std::{fmt, str::FromStr};
 
-use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de::Error as _, Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
 
 use super::errors::{DomainError, ValidationCode};
@@ -84,7 +84,7 @@ macro_rules! define_domain_id {
 
         impl fmt::Display for $name {
             fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.0.hyphenated().fmt(formatter)
+                write!(formatter, "{}", self.0.hyphenated())
             }
         }
 
