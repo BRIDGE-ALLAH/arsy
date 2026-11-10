@@ -2,3 +2,5 @@
 
 pub mod prelude;
 pub mod users;
+pub mod regions;
+pub mod compute_offerings;
