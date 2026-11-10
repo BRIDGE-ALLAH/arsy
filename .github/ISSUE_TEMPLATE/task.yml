@@ -1,0 +1,82 @@
+name: Implementation task
+description: A scoped, dependency-aware ARSY engineering deliverable.
+title: "[P?-xx] [area] Short outcome"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep one independently reviewable deliverable per issue. Read `AGENTS.md` and the architecture/security docs first. Use a stable ID from the phased backlog.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What verifiable result will exist when this task is done?
+      placeholder: Describe the capability or engineering result.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source of truth
+      description: Link product docs, architecture sections, ADRs, or prerequisite issues.
+      placeholder: "- docs/MASTER_BLUEPRINT.md §..."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Narrow scope
+      description: List the files/components and behavior this issue owns. Split unrelated outcomes.
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Design and security rules
+      description: State API, tenant-isolation, credential, availability, and operational constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List stable task IDs (for example P1-03) and why each must be complete first. Write "None" only after checking the dependency graph.
+      placeholder: "- [ ] P1-03 — required because ..."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Write independently verifiable conditions, one checkbox per condition.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests and verification
+      description: Exact unit, integration, security, format, lint, build, or manual checks required.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Explicitly state adjacent features this issue must not implement.
+    validations:
+      required: true
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Issue readiness
+      options:
+        - label: This is one independently reviewable outcome.
+          required: true
+        - label: Stable phase/task ID is present in the title.
+          required: true
+        - label: Dependencies have been checked against the master tracker.
+          required: true
