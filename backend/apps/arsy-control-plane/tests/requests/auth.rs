@@ -1,3 +1,4 @@
+use sea_orm::IntoActiveModel;
 use arsy_control_plane::{app::App, models::users};
 use insta::{assert_debug_snapshot, with_settings};
 use loco_rs::testing::prelude::*;
@@ -327,6 +328,16 @@ async fn can_auth_with_magic_link() {
     configure_insta!();
     request::<App, _, _>(|request, ctx| async move {
         seed::<App>(&ctx).await.unwrap();
+
+        // Passwordless sign-in is available only to verified users.
+        let seeded_user = users::Model::find_by_email(&ctx.db, "user1@example.com")
+            .await
+            .expect("seed should create the magic-link test user");
+        seeded_user
+            .into_active_model()
+            .verified(&ctx.db)
+            .await
+            .expect("test account should be verified");
 
         let payload = serde_json::json!({
             "email": "user1@example.com",
