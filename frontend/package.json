@@ -1,0 +1,13 @@
+{
+  "name": "arsy-frontend",
+  "private": true,
+  "packageManager": "pnpm@12.19.0",
+  "engines": { "node": ">=26.0.0" },
+  "scripts": {
+    "build": "pnpm --recursive --if-present build",
+    "lint": "pnpm --recursive --if-present lint",
+    "typecheck": "pnpm --recursive --if-present typecheck",
+    "dev:console": "pnpm --filter @arsy/console dev",
+    "dev:website": "pnpm --filter @arsy/website dev"
+  }
+}

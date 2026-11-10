@@ -1,0 +1,61 @@
+name: Engineering task
+description: Propose a dependency-scoped ARSY implementation task
+title: "[TASK] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: Describe the observable user or operator outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source of truth
+      description: Link product docs, ADRs, API contracts, upstream provider docs, or parent issues.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and exclusions
+      description: List the exact work included and explicitly excluded.
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Design and security rules
+      description: Cover authorization, tenant boundaries, secrets, idempotency, and provider capability gaps where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List prerequisite issue IDs and why they are required. Split independent work into separate issues.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use observable checkboxes. Keep the phase/task ID stable when this is part of the roadmap.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test and verification plan
+      description: Include commands, automated test cases, failure paths, and operational validation.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: State which adjacent concerns must not be bundled into this task.
+    validations:
+      required: true

@@ -1,0 +1,38 @@
+name: Architecture decision
+description: Propose a documented ARSY architecture decision
+title: "[ADR] "
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and problem
+      description: State the technical/product context, constraints, and why a decision is required now.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Considered options
+      description: Include benefits, costs, operational complexity, and security trade-offs for each viable option.
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed decision
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Positive and negative consequences
+      description: Include reliability, security, developer experience, cost, and operational effects.
+    validations:
+      required: true
+  - type: textarea
+    id: migration
+    attributes:
+      label: Migration, rollback, and reversibility
+      description: Explain how existing systems migrate and how the decision can be reversed safely.
+    validations:
+      required: true

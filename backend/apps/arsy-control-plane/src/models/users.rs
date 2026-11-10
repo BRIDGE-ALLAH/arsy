@@ -11,16 +11,29 @@ pub const MAGIC_LINK_LENGTH: i8 = 32;
 pub const MAGIC_LINK_EXPIRATION_MIN: i8 = 5;
 pub const RESET_TOKEN_EXPIRATION_MIN: i64 = 30;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct LoginParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
+    #[validate(length(min = 1, max = 128, message = "invalid password length"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct RegisterParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
+    #[validate(length(
+        min = 12,
+        max = 128,
+        message = "password must be between 12 and 128 characters"
+    ))]
     pub password: String,
+    #[validate(length(
+        min = 2,
+        max = 80,
+        message = "name must be between 2 and 80 characters"
+    ))]
     pub name: String,
 }
 
@@ -77,10 +90,11 @@ impl Model {
     ///
     /// When could not find user by the given token or DB query error
     pub async fn find_by_email(db: &DatabaseConnection, email: &str) -> ModelResult<Self> {
+        let normalized_email = email.trim().to_ascii_lowercase();
         let user = users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::Email, email)
+                    .eq(users::Column::Email, &normalized_email)
                     .build(),
             )
             .one(db)
@@ -234,12 +248,17 @@ impl Model {
         db: &DatabaseConnection,
         params: &RegisterParams,
     ) -> ModelResult<Self> {
+        params
+            .validate()
+            .map_err(|error| ModelError::msg(error.to_string()))?;
+
+        let normalized_email = params.email.trim().to_ascii_lowercase();
         let txn = db.begin().await?;
 
         if users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::Email, &params.email)
+                    .eq(users::Column::Email, &normalized_email)
                     .build(),
             )
             .one(&txn)
@@ -252,7 +271,7 @@ impl Model {
         let password_hash =
             hash::hash_password(&params.password).map_err(|e| ModelError::Any(e.into()))?;
         let user = users::ActiveModel {
-            email: ActiveValue::set(params.email.clone()),
+            email: ActiveValue::set(normalized_email),
             password: ActiveValue::set(password_hash),
             name: ActiveValue::set(params.name.clone()),
             ..Default::default()
@@ -344,6 +363,11 @@ impl ActiveModel {
         db: &DatabaseConnection,
         password: &str,
     ) -> ModelResult<Model> {
+        if !(12..=128).contains(&password.chars().count()) {
+            return Err(ModelError::msg(
+                "password must be between 12 and 128 characters",
+            ));
+        }
         self.password =
             ActiveValue::set(hash::hash_password(password).map_err(|e| ModelError::Any(e.into()))?);
         self.reset_token = ActiveValue::Set(None);

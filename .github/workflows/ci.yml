@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: arsy-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -14,15 +18,88 @@ jobs:
     name: Validate repository foundation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Check shell syntax
         run: |
           bash -n scripts/dev-up.sh
           bash -n scripts/dev-down.sh
-
+          bash -n scripts/bootstrap-backend.sh
+          bash -n scripts/dev-backend.sh
       - name: Validate development Compose configuration
         run: |
           cp .env.example .env
           docker compose --env-file .env -f deploy/compose.dev.yaml config --quiet
+
+  frontend:
+    name: Lint, type-check, and build Next.js apps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+      - name: Verify frozen dependency resolution
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+      - name: Export generated pnpm lockfile for reproducible setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: arsy-frontend-pnpm-lockfile
+          path: frontend/pnpm-lock.yaml
+          if-no-files-found: error
+      - name: Lint
+        working-directory: frontend
+        run: pnpm lint
+      - name: Type-check
+        working-directory: frontend
+        run: pnpm typecheck
+      - name: Build
+        working-directory: frontend
+        run: pnpm build
+
+  backend-template:
+    name: Generate, lint, and test Loco Control Plane
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: loco
+          POSTGRES_PASSWORD: loco
+          POSTGRES_DB: arsy-control-plane_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U loco -d arsy-control-plane_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://loco:loco@127.0.0.1:5432/arsy-control-plane_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+          components: rustfmt, clippy
+      - name: Generate Loco application
+        run: bash scripts/bootstrap-backend.sh
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path backend/Cargo.toml --all -- --check
+      - name: Compile backend
+        run: cargo check --locked --workspace --manifest-path backend/Cargo.toml
+      - name: Clippy
+        run: cargo clippy --locked --workspace --manifest-path backend/Cargo.toml --all-targets -- -D warnings
+      - name: Build backend
+        run: cargo build --locked --workspace --manifest-path backend/Cargo.toml
+      - name: Run backend tests
+        run: cargo test --locked --workspace --manifest-path backend/Cargo.toml

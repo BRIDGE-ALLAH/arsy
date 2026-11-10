@@ -4,14 +4,14 @@
 
 The repository pins these contributor toolchains:
 
-- Rust: stable channel, with `rustfmt` and `clippy` components.
-- Node.js: 26.x Active LTS (see `.nvmrc` and `.node-version`).
+- Rust: exactly `1.99.1`, with `rustfmt` and `clippy` components (`rust-toolchain.toml`).
+- Node.js: 26.x Active LTS (see `.node-version` and `frontend/.nvmrc`).
 - pnpm: exactly 12.19.0 via the root `package.json` `packageManager` field.
 
 Install Rust with rustup, then let the repository toolchain file select the required channel and components:
 
 ```bash
-rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
 rustc --version
 cargo --version
 ```
@@ -37,7 +37,7 @@ The expected pnpm version is `12.19.0`. Do not replace the exact root `packageMa
 - Git
 - Docker Engine and Docker Compose v2
 - OpenSSL
-- Rust stable toolchain (for backend work)
+- Rust 1.99.1 toolchain (for backend work)
 - Node.js 26.x and pnpm 12.19.0 (for frontend work)
 
 ## 1. Clone and start PostgreSQL
@@ -48,7 +48,7 @@ cd arsy
 ./scripts/dev-up.sh
 ```
 
-The script creates a local .env with a random PostgreSQL password if one does not already exist. The file is ignored by Git and created with restrictive permissions.
+The script creates a local `.env` with a random PostgreSQL password and JWT signing secret if needed. The file is ignored by Git and created with restrictive permissions.
 
 PostgreSQL is bound to 127.0.0.1:5432. The local database defaults to:
 
@@ -59,20 +59,27 @@ PostgreSQL is bound to 127.0.0.1:5432. The local database defaults to:
 
 The password is stored in the local .env file. Do not paste it into issues or logs.
 
-## 2. Generate the Loco control plane
+## 2. Start the Loco control plane
 
-Follow the command in [backend/README.md](../backend/README.md). The official generator writes a standard Loco application under backend/apps/arsy-control-plane.
+The generated application is committed under `backend/apps/arsy-control-plane`. Start the local PostgreSQL dependency and launch the API with:
 
-After generation:
-- Review generated Cargo.toml and config files.
-- Confirm the PostgreSQL connection uses local development values.
-- Keep queue mode configured for PostgreSQL for durable job behavior.
-- Commit Cargo.lock for the generated application.
-- Add a health endpoint check and an initial migration before building domain modules.
+```bash
+bash scripts/dev-backend.sh
+```
+
+The launcher reads the expected variables from the ignored local `.env` file, validates URL-safe database values and a Base64 JWT signing secret, then exports `DATABASE_URL`, `QUEUE_URL`, and `JWT_SECRET` for the process. Development config has no fallback database URI or JWT signing secret. The development mailer is stubbed so local auth flows do not require an SMTP server.
+
+The built-in monitoring endpoints are:
+
+- `GET /_ping` — process liveness.
+- `GET /_health` — application health.
+- `GET /_readiness` — readiness probe.
+
+All three are mounted by Loco's default routes. The readiness handler is framework-owned; do not replace it with a self-reported static response.
 
 ## 3. Frontend
 
-The initial frontend applications are planned under frontend/apps. Use Next.js App Router and TypeScript. Keep the API client separate from UI components and generate types from OpenAPI once the Control Plane contract stabilizes.
+The Next.js App Router applications are under `frontend/apps/console` and `frontend/apps/website`. Use `pnpm --filter @arsy/console dev` or `pnpm --filter @arsy/website dev` from the `frontend` workspace. Keep API clients separate from UI components and generate types from the versioned OpenAPI contract.
 
 ## 4. Stop local dependencies
 

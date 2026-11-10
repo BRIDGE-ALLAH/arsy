@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible defect in ARSY
+title: "[BUG] "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary and impact
+      description: What broke, who is affected, and whether there is a workaround?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ARSY version, commit, and environment
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs and relevant diagnostics
+      description: Remove tokens, credentials, cookies, personal data, IPs where sensitive, and customer identifiers. Never paste secret values.
+    validations:
+      required: false
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression test proposal
+      description: Describe a test that would fail before the fix and pass afterward.
+    validations:
+      required: true
