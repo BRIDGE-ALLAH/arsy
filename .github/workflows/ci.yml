@@ -60,7 +60,7 @@ jobs:
           toolchain: 1.99.1
           components: rustfmt, clippy
       - name: Generate Loco application
-        run: ./scripts/bootstrap-backend.sh
+        run: bash scripts/bootstrap-backend.sh
       - name: Check Rust formatting
         run: cargo fmt --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all -- --check
       - name: Compile backend
