@@ -64,13 +64,40 @@ async fn normalize_error_response(mut response: Response) -> Response {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::body::to_bytes;
 
     #[test]
-    fn middleware_is_toggleable_by_the_loco_stack_contract() {
+    fn middleware_is_registered_with_a_stable_name() {
         assert_eq!(ApiErrorMiddleware.name(), "arsy_api_errors");
         assert_eq!(
             ApiErrorMiddleware.config().expect("serializable config"),
             serde_json::json!({ "enabled": true })
         );
+    }
+
+    #[tokio::test]
+    async fn forbidden_and_conflict_errors_are_normalized_without_raw_body() {
+        for (status, expected_code) in [
+            (StatusCode::FORBIDDEN, "forbidden"),
+            (StatusCode::CONFLICT, "conflict"),
+        ] {
+            let response = Response::builder()
+                .status(status)
+                .header("x-request-id", "safe-correlation-id")
+                .body(Body::from("provider secret=never-return-this; SQLSTATE=23505"))
+                .expect("build test response");
+            let normalized = normalize_error_response(response).await;
+            assert_eq!(normalized.status(), status);
+
+            let bytes = to_bytes(normalized.into_body(), 2048)
+                .await
+                .expect("read normalized response");
+            let body: serde_json::Value =
+                serde_json::from_slice(&bytes).expect("normalized body is JSON");
+            assert_eq!(body["error"]["code"], expected_code);
+            assert_eq!(body["error"]["request_id"], "safe-correlation-id");
+            assert!(!body.to_string().contains("never-return-this"));
+            assert!(!body.to_string().contains("SQLSTATE"));
+        }
     }
 }
