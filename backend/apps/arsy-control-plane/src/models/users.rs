@@ -23,9 +23,17 @@ pub struct LoginParams {
 pub struct RegisterParams {
     #[validate(email(message = "invalid email"))]
     pub email: String,
-    #[validate(length(min = 12, max = 128, message = "password must be between 12 and 128 characters"))]
+    #[validate(length(
+        min = 12,
+        max = 128,
+        message = "password must be between 12 and 128 characters"
+    ))]
     pub password: String,
-    #[validate(length(min = 2, max = 80, message = "name must be between 2 and 80 characters"))]
+    #[validate(length(
+        min = 2,
+        max = 80,
+        message = "name must be between 2 and 80 characters"
+    ))]
     pub name: String,
 }
 
@@ -356,7 +364,9 @@ impl ActiveModel {
         password: &str,
     ) -> ModelResult<Model> {
         if !(12..=128).contains(&password.chars().count()) {
-            return Err(ModelError::msg("password must be between 12 and 128 characters"));
+            return Err(ModelError::msg(
+                "password must be between 12 and 128 characters",
+            ));
         }
         self.password =
             ActiveValue::set(hash::hash_password(password).map_err(|e| ModelError::Any(e.into()))?);
