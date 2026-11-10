@@ -5,7 +5,7 @@ ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="$ROOT_DIR/.env"
 COMPOSE_FILE="$ROOT_DIR/deploy/compose.dev.yaml"
 
-for cmd in docker openssl; do
+for cmd in docker openssl awk grep chmod mktemp mv; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     printf 'Missing required command: %s\n' "$cmd" >&2
     exit 1
@@ -17,24 +17,6 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ ! -f "$ENV_FILE" ]]; then
-  DB_PASSWORD="$(openssl rand -hex 32)"
-  umask 077
-  JWT_SECRET="$(openssl rand -hex 64)"
-  cat >"$ENV_FILE" <<EOF
-POSTGRES_DB=arsy
-POSTGRES_USER=arsy
-POSTGRES_PASSWORD=$DB_PASSWORD
-JWT_SECRET=$JWT_SECRET
-EOF
-  chmod 600 "$ENV_FILE"
-  echo "Created local .env with a random database password."
-else
-  echo "Using existing .env (not modifying secrets)."
-fi
-
-# Older local .env files may predate the JWT secret. Add one without overwriting
-# any existing database credentials or operator-provided values.
 replace_env_value() {
   local key="$1"
   local value="$2"
@@ -50,42 +32,27 @@ replace_env_value() {
   mv "$temp_file" "$ENV_FILE"
 }
 
-# Replace sample placeholders with fresh local-only values. Never silently use
-# the public template values as database or JWT credentials.
-if ! grep -q '^POSTGRES_PASSWORD=.' "$ENV_FILE" || grep -q '^POSTGRES_PASSWORD=replace-for-local-only
+if [[ ! -f "$ENV_FILE" ]]; then
+  umask 077
+  : >"$ENV_FILE"
+  replace_env_value POSTGRES_DB arsy
+  replace_env_value POSTGRES_USER arsy
+  echo "Created local .env."
+fi
 
-echo "Starting ARSY development dependencies..."
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
-
-echo
-echo "PostgreSQL container started."
-echo "Local connection: 127.0.0.1:5432"
-echo "Database: arsy (unless overridden in .env)"
-echo "JWT secret: generated locally and stored in ignored .env"
-echo "Stop with: ./scripts/dev-down.sh"
- "$ENV_FILE"; then
-  DB_PASSWORD="$(openssl rand -hex 32)"
-  replace_env_value POSTGRES_PASSWORD "$DB_PASSWORD"
+# Replace absent/sample values; preserve valid values already chosen by the operator.
+if ! grep -q '^POSTGRES_PASSWORD=.' "$ENV_FILE" || grep -q '^POSTGRES_PASSWORD=replace-for-local-only$' "$ENV_FILE"; then
+  replace_env_value POSTGRES_PASSWORD "$(openssl rand -hex 32)"
   echo "Generated a random local PostgreSQL password."
 fi
 
-if ! grep -q '^JWT_SECRET=.' "$ENV_FILE" || grep -q '^JWT_SECRET=replace-with-random-local-secret
-
-echo "Starting ARSY development dependencies..."
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
-
-echo
-echo "PostgreSQL container started."
-echo "Local connection: 127.0.0.1:5432"
-echo "Database: arsy (unless overridden in .env)"
-echo "JWT secret: generated locally and stored in ignored .env"
-echo "Stop with: ./scripts/dev-down.sh"
- "$ENV_FILE"; then
-  JWT_SECRET="$(openssl rand -hex 64)"
+if ! grep -q '^JWT_SECRET=.' "$ENV_FILE" || grep -q '^JWT_SECRET=replace-with-random-local-secret$' "$ENV_FILE"; then
+  JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')"
   replace_env_value JWT_SECRET "$JWT_SECRET"
-  echo "Generated a random local JWT signing secret."
+  echo "Generated a random local Base64 JWT signing secret."
 fi
 
+# This file contains secrets even when supplied by an operator.
 chmod 600 "$ENV_FILE"
 
 echo "Starting ARSY development dependencies..."
@@ -94,6 +61,6 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
 echo
 echo "PostgreSQL container started."
 echo "Local connection: 127.0.0.1:5432"
-echo "Database: arsy (unless overridden in .env)"
+echo "Database: configured in ignored .env"
 echo "JWT secret: generated locally and stored in ignored .env"
-echo "Stop with: ./scripts/dev-down.sh"
+echo "Stop with: bash scripts/dev-down.sh"
