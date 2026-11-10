@@ -1,0 +1,36 @@
+name: API contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  openapi:
+    name: Generate and validate OpenAPI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Validate deterministic generation
+        run: |
+          bash -n scripts/generate-openapi.sh
+          bash scripts/generate-openapi.sh --check
+          tmp="$(mktemp)"
+          cp docs/api/openapi.yaml "$tmp"
+          bash scripts/generate-openapi.sh --write
+          cmp -s "$tmp" docs/api/openapi.yaml
+          rm -f "$tmp"
+
+      - name: Lint OpenAPI contract
+        run: npx --yes @redocly/cli@2.77.0 lint docs/api/openapi.yaml
