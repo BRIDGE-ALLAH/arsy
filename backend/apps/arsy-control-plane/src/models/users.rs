@@ -82,10 +82,11 @@ impl Model {
     ///
     /// When could not find user by the given token or DB query error
     pub async fn find_by_email(db: &DatabaseConnection, email: &str) -> ModelResult<Self> {
+        let normalized_email = email.trim().to_ascii_lowercase();
         let user = users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::Email, email)
+                    .eq(users::Column::Email, &normalized_email)
                     .build(),
             )
             .one(db)
@@ -243,12 +244,13 @@ impl Model {
             .validate()
             .map_err(|error| ModelError::msg(error.to_string()))?;
 
+        let normalized_email = params.email.trim().to_ascii_lowercase();
         let txn = db.begin().await?;
 
         if users::Entity::find()
             .filter(
                 model::query::condition()
-                    .eq(users::Column::Email, &params.email)
+                    .eq(users::Column::Email, &normalized_email)
                     .build(),
             )
             .one(&txn)
@@ -261,7 +263,7 @@ impl Model {
         let password_hash =
             hash::hash_password(&params.password).map_err(|e| ModelError::Any(e.into()))?;
         let user = users::ActiveModel {
-            email: ActiveValue::set(params.email.trim().to_ascii_lowercase()),
+            email: ActiveValue::set(normalized_email),
             password: ActiveValue::set(password_hash),
             name: ActiveValue::set(params.name.clone()),
             ..Default::default()
@@ -353,6 +355,9 @@ impl ActiveModel {
         db: &DatabaseConnection,
         password: &str,
     ) -> ModelResult<Model> {
+        if !(12..=128).contains(&password.chars().count()) {
+            return Err(ModelError::msg("password must be between 12 and 128 characters"));
+        }
         self.password =
             ActiveValue::set(hash::hash_password(password).map_err(|e| ModelError::Any(e.into()))?);
         self.reset_token = ActiveValue::Set(None);
