@@ -18,7 +18,7 @@ fi
 
 loco new \
   --name arsy-control-plane \
-  --path backend/apps \
+  --path "$app_dir" \
   --db postgres \
   --bg queue-postgres \
   --assets none \
