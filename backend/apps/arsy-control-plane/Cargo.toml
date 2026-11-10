@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "arsy-control-plane"
 version = "0.1.0"
@@ -8,9 +6,6 @@ publish = false
 default-run = "arsy_control_plane-cli"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[workspace.dependencies]
-loco-rs = { version = "1.3", default-features = false }
 
 [dependencies]
 loco-rs = { workspace = true , features = ["auth", "cli", "with-db", "cache_inmem", "worker", "db-postgres", "compression", "generators", "mailer"] }
