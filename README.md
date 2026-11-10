@@ -4,7 +4,7 @@
 
 ARSY is an independent hybrid cloud infrastructure platform designed to provision, operate, and scale infrastructure across ARSY-operated resources and supported third-party providers.
 
-> Project status: architecture and foundation stage. ARSY is not yet production-ready and does not currently provide managed cloud services.
+> **Project status:** architecture and foundation stage. ARSY is not yet production-ready and does not currently provide managed cloud services.
 
 ## Vision
 
@@ -15,27 +15,51 @@ Build an API-first, Rust-powered cloud platform with a modular control plane and
 - **Control plane API:** Rust + Loco.rs.
 - **Frontend:** Next.js App Router + TypeScript.
 - **Database:** PostgreSQL.
-- **Persistence and jobs:** Loco-supported persistent background jobs initially; introduce a distributed event broker only when cross-process or cross-region requirements justify it.
+- **Persistence and jobs:** Loco-supported PostgreSQL-backed background queue initially.
 - **Infrastructure:** provider adapters, authenticated node agents, and explicit resource lifecycle reconciliation.
 - **Deployment:** Docker Compose for development; a guarded single-server installer is a Phase 2 deliverable after the runtime and agent contracts stabilize.
 - **Architecture style:** modular monolith for the control plane, distributed agents and regional cells as the platform grows.
 
 ## Repository layout
 
-```text
+~~~text
 arsy/
-├── backend/       # Rust workspace and Loco.rs control plane
+├── backend/       # Rust and Loco.rs control plane
 ├── frontend/      # Next.js console and public website
-├── deploy/        # Local development and deployment assets
+├── deploy/        # Development and deployment assets
 ├── scripts/       # Development and maintenance scripts
 └── docs/          # Product, architecture, security, API, and operations docs
-```
+~~~
 
-See [the master blueprint](docs/MASTER_BLUEPRINT.md), [the roadmap](docs/ROADMAP.md), and [the installer plan](docs/INSTALLER.md).
+## Start local dependencies
 
-## Development status
+Requirements: Docker Engine, Docker Compose v2, and OpenSSL.
 
-The initial repository foundation is being established. Features must be considered incomplete until they have implementation, automated tests, operational documentation, and a verified deployment path.
+~~~bash
+git clone https://github.com/BRIDGE-ALLAH/arsy.git
+cd arsy
+./scripts/dev-up.sh
+~~~
+
+This starts **PostgreSQL for local development only** and creates a random local password in an ignored .env file. It does not install or start the ARSY API, frontend, or production infrastructure.
+
+Stop the dependency container without deleting its data:
+
+~~~bash
+./scripts/dev-down.sh
+~~~
+
+See [Development Guide](docs/DEVELOPMENT.md) before generating the Loco application.
+
+## Project documents
+
+- [Product narrative](docs/PRODUCT.md)
+- [Master architecture blueprint](docs/MASTER_BLUEPRINT.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Installer and onboarding specification](docs/INSTALLER.md)
+- [Security baseline](docs/SECURITY.md)
+- [ADR-0001: Platform shape](docs/decisions/ADR-0001-platform-shape.md)
 
 ## Principles
 
@@ -48,4 +72,4 @@ The initial repository foundation is being established. Features must be conside
 
 ## License
 
-License to be selected before public distribution. Do not assume an open-source license until a LICENSE file is added.
+A license has not yet been selected. Do not assume this repository is licensed for redistribution until a LICENSE file is added.

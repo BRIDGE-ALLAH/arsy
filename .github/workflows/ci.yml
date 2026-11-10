@@ -1,0 +1,28 @@
+name: Repository checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Validate repository foundation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check shell syntax
+        run: |
+          bash -n scripts/dev-up.sh
+          bash -n scripts/dev-down.sh
+
+      - name: Validate development Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose --env-file .env -f deploy/compose.dev.yaml config --quiet
