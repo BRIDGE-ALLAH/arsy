@@ -7,36 +7,30 @@ use crate::{
     views::auth::{CurrentResponse, LoginResponse},
 };
 use loco_rs::prelude::*;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
 
-pub static EMAIL_DOMAIN_RE: OnceLock<Regex> = OnceLock::new();
-
-fn get_allow_email_domain_re() -> &'static Regex {
-    EMAIL_DOMAIN_RE.get_or_init(|| {
-        Regex::new(r"@example\.com$|@gmail\.com$").expect("Failed to compile regex")
-    })
-}
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct ForgotParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct ResetParams {
     pub token: String,
+    #[validate(length(min = 12, max = 128, message = "password must be between 12 and 128 characters"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct MagicLinkParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct ResendVerificationParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
 }
 
@@ -47,16 +41,17 @@ async fn register(
     State(ctx): State<AppContext>,
     Json(params): Json<RegisterParams>,
 ) -> Result<Response> {
+    if params.validate().is_err() {
+        return bad_request("invalid registration input");
+    }
+
     let res = users::Model::create_with_password(&ctx.db, &params).await;
 
     let user = match res {
         Ok(user) => user,
         Err(err) => {
-            tracing::info!(
-                message = err.to_string(),
-                user_email = &params.email,
-                "could not register user",
-            );
+            // Do not log user-supplied email addresses or other personal data.
+            tracing::info!(error = %err, "could not register user");
             return format::json(());
         }
     };
@@ -99,7 +94,11 @@ async fn forgot(
     State(ctx): State<AppContext>,
     Json(params): Json<ForgotParams>,
 ) -> Result<Response> {
-    let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
+    if params.validate().is_err() {
+        return bad_request("invalid email");
+    }
+    let email = params.email.trim().to_ascii_lowercase();
+    let Ok(user) = users::Model::find_by_email(&ctx.db, &email).await else {
         // we don't want to expose our users email. if the email is invalid we still
         // returning success to the caller
         return format::json(());
@@ -118,6 +117,10 @@ async fn forgot(
 /// reset user password by the given parameters
 #[debug_handler]
 async fn reset(State(ctx): State<AppContext>, Json(params): Json<ResetParams>) -> Result<Response> {
+    if params.validate().is_err() {
+        return bad_request("invalid password reset input");
+    }
+
     let Ok(user) = users::Model::find_by_reset_token(&ctx.db, &params.token).await else {
         // we don't want to expose our users email. if the email is invalid we still
         // returning success to the caller
@@ -135,18 +138,22 @@ async fn reset(State(ctx): State<AppContext>, Json(params): Json<ResetParams>) -
 /// Creates a user login and returns a token
 #[debug_handler]
 async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -> Result<Response> {
-    let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
-        tracing::debug!(
-            email = params.email,
-            "login attempt with non-existent email"
-        );
+    if params.validate().is_err() {
+        return unauthorized("Invalid credentials!");
+    }
+
+    let email = params.email.trim().to_ascii_lowercase();
+    let Ok(user) = users::Model::find_by_email(&ctx.db, &email).await else {
+        tracing::debug!("login attempt with unknown account");
         return unauthorized("Invalid credentials!");
     };
 
     let valid = user.verify_password(&params.password);
 
-    if !valid {
-        return unauthorized("unauthorized!");
+    // Email verification is mandatory for password authentication. Keep the
+    // response identical for invalid passwords and unverified accounts.
+    if !valid || user.email_verified_at.is_none() {
+        return unauthorized("Invalid credentials!");
     }
 
     let jwt_secret = ctx.config.get_jwt_config()?;
@@ -182,21 +189,21 @@ async fn magic_link(
     State(ctx): State<AppContext>,
     Json(params): Json<MagicLinkParams>,
 ) -> Result<Response> {
-    let email_regex = get_allow_email_domain_re();
-    if !email_regex.is_match(&params.email) {
-        tracing::debug!(
-            email = params.email,
-            "The provided email is invalid or does not match the allowed domains"
-        );
-        return bad_request("invalid request");
+    if params.validate().is_err() {
+        return bad_request("invalid email");
     }
 
-    let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
-        // we don't want to expose our users email. if the email is invalid we still
-        // returning success to the caller
-        tracing::debug!(email = params.email, "user not found by email");
+    let email = params.email.trim().to_ascii_lowercase();
+    let Ok(user) = users::Model::find_by_email(&ctx.db, &email).await else {
+        // Do not reveal whether an account exists.
+        tracing::debug!("magic-link request for unknown account");
         return format::empty_json();
     };
+
+    if user.email_verified_at.is_none() {
+        // Only verified accounts can start a passwordless sign-in flow.
+        return format::empty_json();
+    }
 
     let user = user.into_active_model().create_magic_link(&ctx.db).await?;
     AuthMailer::send_magic_link(&ctx, &user).await?;
@@ -231,11 +238,13 @@ async fn resend_verification_email(
     State(ctx): State<AppContext>,
     Json(params): Json<ResendVerificationParams>,
 ) -> Result<Response> {
-    let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
-        tracing::info!(
-            email = params.email,
-            "User not found for resend verification"
-        );
+    if params.validate().is_err() {
+        return bad_request("invalid email");
+    }
+
+    let email = params.email.trim().to_ascii_lowercase();
+    let Ok(user) = users::Model::find_by_email(&ctx.db, &email).await else {
+        tracing::debug!("verification resend requested for unknown account");
         return format::json(());
     };
 
