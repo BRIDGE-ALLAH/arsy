@@ -32,6 +32,10 @@ pnpm --version
 
 The expected pnpm version is `12.19.0`. Do not replace the exact root `packageManager` pin with `latest` or a floating range.
 
+## Repository contribution rules
+
+Read the top-level [AGENTS.md](../AGENTS.md) before opening a change. Every implementation branch should address one dependency-ready child issue and use the repository [pull request template](../.github/pull_request_template.md).
+
 ## Prerequisites
 
 - Git
