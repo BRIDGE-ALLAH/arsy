@@ -1,7 +1,7 @@
 use loco_rs::prelude::*;
 use serde::Serialize;
 
-use crate::domain::{RegionId, ResourceId};
+use crate::domain::RegionId;
 
 pub use super::_entities::{compute_offerings, regions};
 
@@ -81,7 +81,7 @@ impl TryFrom<regions::Model> for RegionResponse {
 
 #[derive(Debug, Serialize)]
 pub struct ComputeOfferingResponse {
-    pub id: ResourceId,
+    pub id: uuid::Uuid,
     pub region_id: RegionId,
     pub code: String,
     pub name: String,
@@ -101,7 +101,7 @@ impl ComputeOfferingResponse {
     ) -> loco_rs::Result<Self> {
         let status = OfferingStatus::parse(&model.status)?;
         Ok(Self {
-            id: ResourceId::from_uuid(model.id),
+            id: model.id,
             region_id: RegionId::from_uuid(model.region_id),
             code: model.code,
             name: model.name,
