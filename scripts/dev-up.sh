@@ -62,7 +62,7 @@ ensure_env_value() {
 ensure_env_value POSTGRES_DB arsy
 ensure_env_value POSTGRES_USER arsy
 ensure_env_value POSTGRES_PASSWORD "$(openssl rand -hex 32)"
-ensure_env_value JWT_SECRET "$(openssl rand -hex 32)"
+ensure_env_value JWT_SECRET "$(openssl rand -base64 64 | tr -d '\n')"
 chmod 600 "$ENV_FILE"
 
 echo "Starting ARSY development dependencies..."
