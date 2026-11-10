@@ -5,7 +5,9 @@ use loco_rs::{auth::jwt, prelude::*};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
-use crate::models::{sessions, users};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+
+use crate::models::{_entities::users as user_entity, sessions, users};
 
 /// Creates a signed token and matching session record. The token is returned
 /// only after the session has been durably written to PostgreSQL.
@@ -47,7 +49,17 @@ pub async fn require_active_session(
         return unauthorized("missing session identifier");
     };
 
-    let user = users::Model::find_by_pid(&ctx.db, &claims.claims.pid).await?;
+    let Some(pid) = Uuid::parse_str(&claims.claims.pid).ok() else {
+        return unauthorized("invalid token subject");
+    };
+    let user = user_entity::Entity::find()
+        .filter(user_entity::Column::Pid.eq(pid))
+        .one(&ctx.db)
+        .await?;
+    let Some(user) = user else {
+        return unauthorized("unknown token subject");
+    };
+
     if !sessions::is_active(&ctx.db, user.id, session_id).await? {
         return unauthorized("inactive or revoked session");
     }
