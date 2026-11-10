@@ -4,7 +4,7 @@
 
 ARSY is an independent hybrid cloud infrastructure platform designed to provision, operate, and scale infrastructure across ARSY-operated resources and supported third-party providers.
 
-> **Project status:** architecture and foundation stage. ARSY is not yet production-ready and does not currently provide managed cloud services.
+> **Project status:** architecture and foundation stage. ARSY is not production-ready and does not currently provide managed cloud services.
 
 ## Vision
 
@@ -17,19 +17,8 @@ Build an API-first, Rust-powered cloud platform with a modular control plane and
 - **Database:** PostgreSQL.
 - **Persistence and jobs:** Loco-supported PostgreSQL-backed background queue initially.
 - **Infrastructure:** provider adapters, authenticated node agents, and explicit resource lifecycle reconciliation.
-- **Deployment:** Docker Compose for development; a guarded single-server installer is a Phase 2 deliverable after the runtime and agent contracts stabilize.
+- **Deployment:** Docker Compose for development; a guarded single-server installer is a Phase 2 deliverable after runtime and agent contracts stabilize.
 - **Architecture style:** modular monolith for the control plane, distributed agents and regional cells as the platform grows.
-
-## Repository layout
-
-~~~text
-arsy/
-├── backend/       # Rust and Loco.rs control plane
-├── frontend/      # Next.js console and public website
-├── deploy/        # Development and deployment assets
-├── scripts/       # Development and maintenance scripts
-└── docs/          # Product, architecture, security, API, and operations docs
-~~~
 
 ## Start local dependencies
 
@@ -41,7 +30,7 @@ cd arsy
 ./scripts/dev-up.sh
 ~~~
 
-This starts **PostgreSQL for local development only** and creates a random local password in an ignored .env file. It does not install or start the ARSY API, frontend, or production infrastructure.
+This starts PostgreSQL for local development only and creates a random local password in an ignored `.env` file. It does not install or start ARSY services.
 
 Stop the dependency container without deleting its data:
 
@@ -49,11 +38,31 @@ Stop the dependency container without deleting its data:
 ./scripts/dev-down.sh
 ~~~
 
-See [Development Guide](docs/DEVELOPMENT.md) before generating the Loco application.
+## Start the frontend
+
+Requirements: Node.js 26 and pnpm 10.20.0.
+
+~~~bash
+cd frontend
+pnpm install
+pnpm dev:console
+~~~
+
+The public landing page runs with `pnpm dev:website`. These applications are scaffolds; authenticated cloud management is not available yet.
+
+## Generate the backend
+
+Install the pinned Rust toolchain using rustup, then run:
+
+~~~bash
+./scripts/bootstrap-backend.sh
+~~~
+
+The script generates the Loco Control Plane with PostgreSQL persistence and a PostgreSQL-backed worker queue. Review the generated configuration before connecting it to anything other than a local development database.
 
 ## Work tracking
 
-The phased implementation backlog is maintained in [GitHub issue #1](https://github.com/BRIDGE-ALLAH/arsy/issues/1). Work one dependency-ready child issue per pull request; each issue includes its own specification, design rules, acceptance checklist, test plan, and out-of-scope boundary.
+The phased implementation backlog is maintained in [GitHub issue #1](https://github.com/BRIDGE-ALLAH/arsy/issues/1). Work one dependency-ready child issue per pull request.
 
 ## Project documents
 
