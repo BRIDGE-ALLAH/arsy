@@ -11,16 +11,21 @@ pub const MAGIC_LINK_LENGTH: i8 = 32;
 pub const MAGIC_LINK_EXPIRATION_MIN: i8 = 5;
 pub const RESET_TOKEN_EXPIRATION_MIN: i64 = 30;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct LoginParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
+    #[validate(length(min = 1, max = 128, message = "invalid password length"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct RegisterParams {
+    #[validate(email(message = "invalid email"))]
     pub email: String,
+    #[validate(length(min = 12, max = 128, message = "password must be between 12 and 128 characters"))]
     pub password: String,
+    #[validate(length(min = 2, max = 80, message = "name must be between 2 and 80 characters"))]
     pub name: String,
 }
 
@@ -234,6 +239,10 @@ impl Model {
         db: &DatabaseConnection,
         params: &RegisterParams,
     ) -> ModelResult<Self> {
+        params
+            .validate()
+            .map_err(|error| ModelError::msg(error.to_string()))?;
+
         let txn = db.begin().await?;
 
         if users::Entity::find()
@@ -252,7 +261,7 @@ impl Model {
         let password_hash =
             hash::hash_password(&params.password).map_err(|e| ModelError::Any(e.into()))?;
         let user = users::ActiveModel {
-            email: ActiveValue::set(params.email.clone()),
+            email: ActiveValue::set(params.email.trim().to_ascii_lowercase()),
             password: ActiveValue::set(password_hash),
             name: ActiveValue::set(params.name.clone()),
             ..Default::default()
