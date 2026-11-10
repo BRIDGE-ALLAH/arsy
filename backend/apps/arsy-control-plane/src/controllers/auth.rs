@@ -258,9 +258,9 @@ async fn resend_verification_email(
     format::json(())
 }
 
-pub fn routes() -> Routes {
+fn routes_at(prefix: &'static str) -> Routes {
     Routes::new()
-        .prefix("/api/auth")
+        .prefix(prefix)
         .add("/register", post(register))
         .add("/verify/{token}", get(verify))
         .add("/login", post(login))
@@ -270,4 +270,15 @@ pub fn routes() -> Routes {
         .add("/magic-link", post(magic_link))
         .add("/magic-link/{token}", get(magic_link_verify))
         .add("/resend-verification-mail", post(resend_verification_email))
+}
+
+/// Versioned authentication routes. New clients should use this prefix.
+pub fn routes() -> Routes {
+    routes_at("/api/v1/auth")
+}
+
+/// Temporary compatibility alias for clients using the original generated path.
+/// Remove only in a separately announced breaking API release.
+pub fn legacy_routes() -> Routes {
+    routes_at("/api/auth")
 }
