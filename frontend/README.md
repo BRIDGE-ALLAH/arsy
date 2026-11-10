@@ -1,37 +1,33 @@
 # ARSY Frontend
 
-The planned customer console and public website use Next.js App Router and TypeScript.
+The frontend is a pnpm workspace. The first application is the Next.js App Router console at `apps/console`.
 
-## Applications
+## Console
 
-- apps/console: authenticated cloud management console.
-- apps/website: public product and documentation entry point.
+From the repository root:
 
-## Shared packages (add as needed)
+```bash
+pnpm install
+pnpm dev:console
+```
 
-- packages/ui: design-system components.
-- packages/api-client: generated or typed Control Plane API client.
-- packages/types: shared API and UI types.
-- packages/config: shared lint and TypeScript configuration.
+The console uses Next.js App Router, React, and strict TypeScript. It is a product foundation only: authentication, navigation shell, API integration, and cloud resource pages are separate implementation tasks.
 
-## Recommended stack
+Copy `frontend/apps/console/.env.example` to `frontend/apps/console/.env.local` to configure the public Control Plane API base URL. Only non-secret public configuration belongs in `NEXT_PUBLIC_*` variables.
 
-- Next.js App Router + TypeScript
-- Tailwind CSS + shadcn/ui
-- TanStack Query for remote state
-- Zustand only for local client-owned state
-- React Hook Form + Zod
-- Apache ECharts for metrics
-- pnpm
+## Quality checks
 
-## Rules
+```bash
+pnpm lint:console
+pnpm typecheck:console
+pnpm build:console
+```
+
+## Security rules
 
 - Backend authorization is authoritative; hiding a UI action is not security.
 - Never store provider credentials in browser storage.
+- Do not put server-side secrets in `NEXT_PUBLIC_*` variables.
 - Prefer generated OpenAPI types once the API contract stabilizes.
 - Keep server components for server-rendered data and client components for interactive controls.
 - Add accessible loading, empty, error, and permission-denied states.
-
-## Status
-
-The Next.js applications are planned but have not yet been scaffolded or built in this repository.

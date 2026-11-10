@@ -4,5 +4,11 @@
   "engines": {
     "node": ">=26.0.0 <27"
   },
-  "packageManager": "pnpm@12.19.0"
+  "packageManager": "pnpm@12.19.0",
+  "scripts": {
+    "dev:console": "pnpm --filter @arsy/console dev",
+    "build:console": "pnpm --filter @arsy/console build",
+    "lint:console": "pnpm --filter @arsy/console lint",
+    "typecheck:console": "pnpm --filter @arsy/console typecheck"
+  }
 }
