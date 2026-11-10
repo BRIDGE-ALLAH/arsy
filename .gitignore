@@ -1,0 +1,32 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Rust
+/target
+**/target
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+dist/
+coverage/
+pnpm-debug.log*
+
+# Local data and logs
+data/
+logs/
+*.log
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
