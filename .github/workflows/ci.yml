@@ -21,8 +21,54 @@ jobs:
         run: |
           bash -n scripts/dev-up.sh
           bash -n scripts/dev-down.sh
+          if [[ -f scripts/dev-api.sh ]]; then bash -n scripts/dev-api.sh; fi
 
       - name: Validate development Compose configuration
         run: |
           cp .env.example .env
           docker compose --env-file .env -f deploy/compose.dev.yaml config --quiet
+
+  backend:
+    name: Rust format, lint, build, and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: arsy_control_plane_test
+          POSTGRES_USER: arsy
+          POSTGRES_PASSWORD: arsy-ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arsy -d arsy_control_plane_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://arsy:arsy-ci-only-password@127.0.0.1:5432/arsy_control_plane_test
+      QUEUE_URL: postgres://arsy:arsy-ci-only-password@127.0.0.1:5432/arsy_control_plane_test
+      JWT_SECRET: ci-only-secret-not-used-outside-tests
+      RUST_BACKTRACE: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup default stable
+          rustc --version
+          cargo --version
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all-targets -- -D warnings
+
+      - name: Build and test
+        run: |
+          cargo check --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+          cargo test --manifest-path backend/apps/arsy-control-plane/Cargo.toml
