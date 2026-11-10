@@ -7,7 +7,7 @@ The frontend is a pnpm workspace with two independently deployable Next.js App R
 
 ## Toolchain
 - Node.js 26 LTS (see `../.node-version` and `.nvmrc`).
-- pnpm 10.20.0 (pinned in the workspace manifest).
+- pnpm 12.19.0 (pinned in the workspace manifest).
 - Next.js 16.4.6 and React 19.2.0.
 
 ## Install and run
