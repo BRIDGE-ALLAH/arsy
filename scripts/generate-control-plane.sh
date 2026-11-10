@@ -10,6 +10,7 @@ if ! command -v loco >/dev/null 2>&1; then
 fi
 
 app_dir="backend/apps/arsy-control-plane"
+mkdir -p "$(dirname "$app_dir")"
 if [[ -e "$app_dir" ]]; then
   echo "Refusing to overwrite existing app directory: $app_dir" >&2
   exit 1
