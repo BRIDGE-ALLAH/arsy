@@ -300,9 +300,20 @@ components:
           enum: [ready, not_ready]
     ErrorEnvelope:
       type: object
-      required: [error, description]
+      additionalProperties: false
+      required: [error]
       properties:
         error:
-          type: string
-        description:
-          type: string
+          type: object
+          additionalProperties: false
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+              enum: [invalid_request, unauthorized, forbidden, not_found, conflict, rate_limited, unavailable, internal_error]
+            message:
+              type: string
+              description: Stable safe message; never contains internal exception details.
+            request_id:
+              type: [string, "null"]
+              description: Sanitized Loco request correlation ID, if present.
