@@ -1,0 +1,191 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ARSY Control Plane API",
+    "version": "1.0.0",
+    "description": "Versioned API contract for the ARSY hybrid cloud control plane. New customer-facing endpoints are added beneath /api/v1. Legacy /api/auth endpoints remain temporarily available for compatibility."
+  },
+  "servers": [{ "url": "/" }],
+  "tags": [{ "name": "Authentication", "description": "User account authentication and recovery." }],
+  "paths": {
+    "/api/v1/openapi.json": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Retrieve the versioned API document",
+        "operationId": "getOpenApiDocument",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 document",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a user account",
+        "operationId": "registerUser",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } } },
+        "responses": {
+          "200": { "description": "Registration request accepted. Email verification is sent when applicable." },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate with email and password",
+        "operationId": "loginUser",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": { "description": "Authenticated user and bearer token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/auth/current": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get the authenticated user",
+        "operationId": "getCurrentUser",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current authenticated user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CurrentUser" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/auth/verify/{token}": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Verify an email address",
+        "operationId": "verifyEmail",
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Email address verified" }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+      }
+    },
+    "/api/v1/auth/forgot": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password recovery",
+        "operationId": "requestPasswordRecovery",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailRequest" } } } },
+        "responses": { "200": { "description": "Request accepted without disclosing whether the email exists" } }
+      }
+    },
+    "/api/v1/auth/reset": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Reset a password with a recovery token",
+        "operationId": "resetPassword",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResetPasswordRequest" } } } },
+        "responses": { "200": { "description": "Request processed" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/api/v1/auth/resend-verification-mail": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Resend email verification",
+        "operationId": "resendVerificationEmail",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailRequest" } } } },
+        "responses": { "200": { "description": "Request accepted without disclosing account existence" } }
+      }
+    },
+    "/api/v1/auth/magic-link": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request a passwordless sign-in link",
+        "operationId": "requestMagicLink",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailRequest" } } } },
+        "responses": { "200": { "description": "Request accepted where the email is eligible" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/api/v1/auth/magic-link/{token}": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Verify a one-time sign-in link",
+        "operationId": "verifyMagicLink",
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Authenticated user and bearer token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password", "minLength": 8 }
+        },
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" }
+        },
+        "additionalProperties": false
+      },
+      "EmailRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": { "email": { "type": "string", "format": "email" } },
+        "additionalProperties": false
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["token", "password"],
+        "properties": {
+          "token": { "type": "string" },
+          "password": { "type": "string", "format": "password", "minLength": 8 }
+        },
+        "additionalProperties": false
+      },
+      "LoginResponse": {
+        "type": "object",
+        "description": "Response returned by the current generated Loco authentication handler.",
+        "properties": {
+          "token": { "type": "string" },
+          "pid": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "CurrentUser": {
+        "type": "object",
+        "description": "Current user response. Fields are maintained by the Loco auth view.",
+        "additionalProperties": true
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "The request is invalid",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Unauthorized": {
+        "description": "Authentication is missing or invalid",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  }
+}
