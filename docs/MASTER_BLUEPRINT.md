@@ -146,7 +146,7 @@ Rules:
 - Domain code must not depend on Loco controllers or a specific cloud SDK.
 - Controllers validate and translate HTTP requests; they do not contain provisioning logic.
 - Provider SDKs live behind adapter crates/modules.
-- Use typed IDs and explicit domain errors.
+- Use typed IDs and explicit domain errors. The canonical format and categories are defined in [Domain Primitives](DOMAIN.md).
 - External side effects must be represented as durable operations.
 - Commands must be idempotent or carry an idempotency key.
 - Store desired state separately from observed state.
