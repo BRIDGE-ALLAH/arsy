@@ -21,7 +21,7 @@ The catalogue is global configuration, not a tenant resource. It contains no cre
 After migrations have been applied to a local PostgreSQL database:
 
 ```bash
-./scripts/seed-catalog.sh
+bash scripts/seed-catalog.sh
 ```
 
 The seed uses stable identifiers and `ON CONFLICT` clauses, and may be run repeatedly. The only fixture is a planned placeholder region and an unverified compute offering; neither is selectable. Do not enable them without verified infrastructure and a separate operational review.
