@@ -18,7 +18,11 @@ pub struct ForgotParams {
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct ResetParams {
     pub token: String,
-    #[validate(length(min = 12, max = 128, message = "password must be between 12 and 128 characters"))]
+    #[validate(length(
+        min = 12,
+        max = 128,
+        message = "password must be between 12 and 128 characters"
+    ))]
     pub password: String,
 }
 
