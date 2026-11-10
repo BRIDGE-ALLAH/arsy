@@ -1,0 +1,8 @@
+{
+  "name": "arsy",
+  "private": true,
+  "engines": {
+    "node": ">=26.0.0 <27"
+  },
+  "packageManager": "pnpm@12.19.0"
+}
