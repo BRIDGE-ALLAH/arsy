@@ -320,7 +320,7 @@
           "password": {
             "type": "string",
             "format": "password",
-            "minLength": 8
+            "minLength": 12
           }
         },
         "additionalProperties": false
@@ -369,7 +369,7 @@
           "password": {
             "type": "string",
             "format": "password",
-            "minLength": 8
+            "minLength": 12
           }
         },
         "additionalProperties": false
