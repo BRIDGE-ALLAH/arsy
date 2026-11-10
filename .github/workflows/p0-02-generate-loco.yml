@@ -52,6 +52,9 @@ jobs:
       - name: Generate the PostgreSQL JSON API and durable queue app
         run: bash scripts/generate-control-plane.sh
 
+      - name: Generate dependency lockfile
+        run: cargo generate-lockfile --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+
       - name: Check formatting
         run: cargo fmt --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all -- --check
 
