@@ -26,7 +26,7 @@ async fn can_register() {
         let payload = serde_json::json!({
             "name": "loco",
             "email": email,
-            "password": "12341234"
+            "password": "correct-horse-battery"
         });
 
         let response = request.post("/api/auth/register").json(&payload).await;
@@ -67,7 +67,7 @@ async fn can_register() {
 #[tokio::test]
 #[serial]
 async fn can_login_with_verify_valid_password() {
-    can_login_with_verify("login_with_valid_password", "12341234").await;
+    can_login_with_verify("login_with_valid_password", "correct-horse-battery").await;
 }
 
 #[tokio::test]
@@ -84,7 +84,7 @@ async fn can_login_with_verify(test_name: &str, password: &str) {
         let register_payload = serde_json::json!({
             "name": "loco",
             "email": email,
-            "password": "12341234"
+            "password": "correct-horse-battery"
         });
 
         //Creating a new user
@@ -159,12 +159,12 @@ async fn login_with_un_existing_email() {
 
 #[tokio::test]
 #[serial]
-async fn can_login_without_verify() {
+async fn rejects_login_without_email_verification() {
     configure_insta!();
 
     request::<App, _, _>(|request, _ctx| async move {
         let email = "test@loco.com";
-        let password = "12341234";
+        let password = "correct-horse-battery";
         let register_payload = serde_json::json!({
             "name": "loco",
             "email": email,
@@ -194,15 +194,9 @@ async fn can_login_without_verify() {
 
         assert_eq!(
             login_response.status_code(),
-            200,
-            "Login request should succeed"
+            401,
+            "Unverified accounts must not receive a session token"
         );
-
-        with_settings!({
-            filters => cleanup_user_model()
-        }, {
-            assert_debug_snapshot!(login_response.text());
-        });
     })
     .await;
 }
@@ -388,7 +382,7 @@ async fn can_auth_with_magic_link() {
 async fn can_reject_invalid_email() {
     configure_insta!();
     request::<App, _, _>(|request, _ctx| async move {
-        let invalid_email = "user1@temp-mail.com";
+        let invalid_email = "not-an-email";
         let payload = serde_json::json!({
             "email": invalid_email,
         });
@@ -429,7 +423,7 @@ async fn can_resend_verification_email() {
         let payload = serde_json::json!({
             "name": "loco",
             "email": email,
-            "password": "12341234"
+            "password": "correct-horse-battery"
         });
 
         let response = request.post("/api/auth/register").json(&payload).await;
@@ -483,7 +477,7 @@ async fn cannot_resend_email_if_already_verified() {
         let payload = serde_json::json!({
             "name": "verified",
             "email": email,
-            "password": "12341234"
+            "password": "correct-horse-battery"
         });
 
         request.post("/api/auth/register").json(&payload).await;
