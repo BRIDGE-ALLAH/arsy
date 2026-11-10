@@ -40,6 +40,19 @@ async fn can_register() {
             200,
             "Register request should succeed"
         );
+
+        // Duplicate registration must not replace the existing identity or send
+        // another welcome email.
+        let duplicate_response = request
+            .post("/api/v1/auth/register")
+            .json(&serde_json::json!({
+                "name": "attacker-controlled replacement",
+                "email": email,
+                "password": "different-password"
+            }))
+            .await;
+        assert_eq!(duplicate_response.status_code(), 200);
+
         let saved_user = users::Model::find_by_email(&ctx.db, email)
             .await
             .expect("registration should have persisted a user");
