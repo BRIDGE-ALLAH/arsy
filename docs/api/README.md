@@ -20,15 +20,8 @@ The first application routes are mounted at:
 
 The current artifact only describes endpoints that exist in this repository. It intentionally does not publish planned compute, network, storage, or billing routes.
 
-## Error envelope
+## Error, list, and correlation conventions
 
-Transport errors retain the current Loco-safe envelope shape:
-
-```json
-{
-  "error": "unauthorized",
-  "description": "You do not have permission to access this resource"
-}
-```
+The shared transport error envelope, pagination bounds, query validation, filtering convention, and request-ID behavior are defined in [PAGINATION.md](PAGINATION.md). Every non-2xx response is normalized to a stable safe error code and message. The response `request_id` is copied only from Loco's sanitized `x-request-id` header.
 
 Domain categories remain framework-independent; HTTP status mapping belongs in the API adapter. Never expose stack traces, raw SQL/provider errors, credentials, or secret-bearing request values.
