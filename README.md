@@ -51,6 +51,10 @@ Stop the dependency container without deleting its data:
 
 See [Development Guide](docs/DEVELOPMENT.md) before generating the Loco application.
 
+## Work tracking
+
+The phased implementation backlog is maintained in [GitHub issue #1](https://github.com/BRIDGE-ALLAH/arsy/issues/1). Work one dependency-ready child issue per pull request; each issue includes its own specification, design rules, acceptance checklist, test plan, and out-of-scope boundary.
+
 ## Project documents
 
 - [Product narrative](docs/PRODUCT.md)
