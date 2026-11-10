@@ -21,7 +21,11 @@ async fn monitoring_endpoints_are_mounted() {
         );
 
         let openapi = request.get("/api/v1/openapi.json").await;
-        assert_eq!(openapi.status_code(), 200, "versioned OpenAPI document should be available");
+        assert_eq!(
+            openapi.status_code(),
+            200,
+            "versioned OpenAPI document should be available"
+        );
         let openapi_body = openapi.text();
         assert!(openapi_body.contains("\"openapi\":\"3.1.0\""));
         assert!(openapi_body.contains("/api/v1/auth/login"));
