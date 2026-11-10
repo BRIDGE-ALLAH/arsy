@@ -79,12 +79,12 @@ jobs:
       - name: Generate Loco application
         run: bash scripts/bootstrap-backend.sh
       - name: Check Rust formatting
-        run: cargo fmt --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all -- --check
+        run: cargo fmt --manifest-path backend/Cargo.toml --all -- --check
       - name: Compile backend
-        run: cargo check --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+        run: cargo check --locked --workspace --manifest-path backend/Cargo.toml
       - name: Clippy
-        run: cargo clippy --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --manifest-path backend/Cargo.toml --all-targets -- -D warnings
       - name: Build backend
-        run: cargo build --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+        run: cargo build --locked --workspace --manifest-path backend/Cargo.toml
       - name: Run backend tests
-        run: cargo test --locked --manifest-path backend/apps/arsy-control-plane/Cargo.toml
+        run: cargo test --locked --workspace --manifest-path backend/Cargo.toml
