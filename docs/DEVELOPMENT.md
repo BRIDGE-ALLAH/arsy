@@ -1,20 +1,52 @@
 # ARSY Development Guide
 
+## Toolchain versions
+
+The repository pins these contributor toolchains:
+
+- Rust: stable channel, with `rustfmt` and `clippy` components.
+- Node.js: 26.x Active LTS (see `.nvmrc` and `.node-version`).
+- pnpm: exactly 12.19.0 via the root `package.json` `packageManager` field.
+
+Install Rust with rustup, then let the repository toolchain file select the required channel and components:
+
+```bash
+rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+rustc --version
+cargo --version
+```
+
+Install Node.js 26 using your preferred version manager (for example, `nvm install` reads `.nvmrc`), then activate the pinned package manager. On machines with Corepack installed:
+
+```bash
+corepack enable pnpm
+pnpm --version
+```
+
+If Corepack is not installed with your Node distribution, install/enable Corepack using its official instructions, or install the exact package manager version directly:
+
+```bash
+npm install --global pnpm@12.19.0
+pnpm --version
+```
+
+The expected pnpm version is `12.19.0`. Do not replace the exact root `packageManager` pin with `latest` or a floating range.
+
 ## Prerequisites
 
 - Git
 - Docker Engine and Docker Compose v2
 - OpenSSL
 - Rust stable toolchain (for backend work)
-- Node.js LTS and pnpm (for frontend work)
+- Node.js 26.x and pnpm 12.19.0 (for frontend work)
 
 ## 1. Clone and start PostgreSQL
 
-~~~bash
+```bash
 git clone https://github.com/BRIDGE-ALLAH/arsy.git
 cd arsy
 ./scripts/dev-up.sh
-~~~
+```
 
 The script creates a local .env with a random PostgreSQL password if one does not already exist. The file is ignored by Git and created with restrictive permissions.
 
@@ -44,9 +76,9 @@ The initial frontend applications are planned under frontend/apps. Use Next.js A
 
 ## 4. Stop local dependencies
 
-~~~bash
+```bash
 ./scripts/dev-down.sh
-~~~
+```
 
 The PostgreSQL volume is preserved. To intentionally delete all local database data, use Docker Compose with the documented development compose file and the -v flag after confirming that the data is disposable.
 
