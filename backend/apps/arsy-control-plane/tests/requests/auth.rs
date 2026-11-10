@@ -405,6 +405,12 @@ async fn can_reject_invalid_email() {
             400,
             "Expected request with invalid email '{invalid_email}' to be blocked, but it was allowed."
         );
+        let body: serde_json::Value =
+            serde_json::from_str(&response.text()).expect("normalized error is JSON");
+        assert_eq!(body["error"]["code"], "invalid_request");
+        assert_eq!(body["error"]["message"], "The request is invalid.");
+        assert!(body["error"]["request_id"].as_str().is_some());
+        assert!(!body.to_string().contains(invalid_email));
     })
     .await;
 }
