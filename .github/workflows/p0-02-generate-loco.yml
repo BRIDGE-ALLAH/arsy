@@ -3,9 +3,10 @@ name: Generate Loco Control Plane (P0-02)
 on:
   push:
     branches:
-      - p0-02-loco-app
+      - p0-02-loco-generate
     paths:
       - .github/workflows/p0-02-generate-loco.yml
+      - scripts/generate-control-plane.sh
 
 permissions:
   contents: write
@@ -56,7 +57,7 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y postgresql-client
 
-      - name: Compile and run generated tests
+      - name: Run generated tests
         env:
           PGPASSWORD: loco
         run: |
@@ -75,4 +76,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "build(backend): generate Loco control plane app (P0-02)"
-          git push origin HEAD:p0-02-loco-app
+          git push origin HEAD:p0-02-loco-generate
