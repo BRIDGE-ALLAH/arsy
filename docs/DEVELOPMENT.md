@@ -37,7 +37,7 @@ The expected pnpm version is `12.19.0`. Do not replace the exact root `packageMa
 - Git
 - Docker Engine and Docker Compose v2
 - OpenSSL
-- Rust stable toolchain (for backend work)
+- Rust 1.99.1 toolchain (for backend work)
 - Node.js 26.x and pnpm 12.19.0 (for frontend work)
 
 ## 1. Clone and start PostgreSQL
