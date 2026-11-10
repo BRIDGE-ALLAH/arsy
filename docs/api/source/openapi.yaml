@@ -9,6 +9,8 @@ info:
 servers:
   - url: http://127.0.0.1:5150
     description: Local development only; production deployments configure their own server URL.
+security: []
+
 tags:
   - name: Monitoring
   - name: Health
