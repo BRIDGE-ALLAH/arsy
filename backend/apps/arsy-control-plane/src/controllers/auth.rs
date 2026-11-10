@@ -51,12 +51,10 @@ async fn register(
 
     let user = match res {
         Ok(user) => user,
-        Err(err) => {
-            tracing::info!(
-                message = err.to_string(),
-                user_email = &params.email,
-                "could not register user",
-            );
+        Err(_err) => {
+            // Registration remains non-enumerating; do not log the submitted address
+            // or raw database/validation errors.
+            tracing::info!("registration request was not accepted");
             return format::json(());
         }
     };
@@ -125,6 +123,9 @@ async fn reset(State(ctx): State<AppContext>, Json(params): Json<ResetParams>) -
 
         return format::json(());
     };
+    // Revoke first: if revocation fails, do not report a successful password reset.
+    // A later password-hash write failure may sign the user out, which is fail-safe.
+    crate::models::sessions::revoke_all_for_user(&ctx.db, user.id).await?;
     user.into_active_model()
         .reset_password(&ctx.db, &params.password)
         .await?;
@@ -136,10 +137,7 @@ async fn reset(State(ctx): State<AppContext>, Json(params): Json<ResetParams>) -
 #[debug_handler]
 async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -> Result<Response> {
     let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
-        tracing::debug!(
-            email = params.email,
-            "login attempt with non-existent email"
-        );
+        tracing::debug!("login attempt with unknown account");
         return unauthorized("Invalid credentials!");
     };
 
@@ -149,19 +147,27 @@ async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -
         return unauthorized("unauthorized!");
     }
 
-    let jwt_secret = ctx.config.get_jwt_config()?;
-
-    let token = user
-        .generate_jwt(&jwt_secret.secret, jwt_secret.expiration)
-        .or_else(|_| unauthorized("unauthorized!"))?;
+    let token = crate::auth::session::issue_token(&ctx, &user).await?;
 
     format::json(LoginResponse::new(&user, &token))
 }
 
 #[debug_handler]
 async fn current(auth: auth::JWT, State(ctx): State<AppContext>) -> Result<Response> {
-    let user = users::Model::find_by_pid(&ctx.db, &auth.claims.pid).await?;
+    let (user, _session_id) =
+        crate::auth::session::require_active_session(&ctx, &auth).await?;
     format::json(CurrentResponse::new(&user))
+}
+
+#[debug_handler]
+async fn logout(auth: auth::JWT, State(ctx): State<AppContext>) -> Result<Response> {
+    let (user, session_id) =
+        crate::auth::session::require_active_session(&ctx, &auth).await?;
+    let revoked = crate::models::sessions::revoke(&ctx.db, user.id, session_id).await?;
+    if !revoked {
+        return unauthorized("session already revoked");
+    }
+    format::json(())
 }
 
 /// Magic link authentication provides a secure and passwordless way to log in to the application.
@@ -184,17 +190,14 @@ async fn magic_link(
 ) -> Result<Response> {
     let email_regex = get_allow_email_domain_re();
     if !email_regex.is_match(&params.email) {
-        tracing::debug!(
-            email = params.email,
-            "The provided email is invalid or does not match the allowed domains"
-        );
+        tracing::debug!("magic-link request rejected by email-domain policy");
         return bad_request("invalid request");
     }
 
     let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
         // we don't want to expose our users email. if the email is invalid we still
         // returning success to the caller
-        tracing::debug!(email = params.email, "user not found by email");
+        tracing::debug!("magic-link request for unknown account");
         return format::empty_json();
     };
 
@@ -217,11 +220,7 @@ async fn magic_link_verify(
 
     let user = user.into_active_model().clear_magic_link(&ctx.db).await?;
 
-    let jwt_secret = ctx.config.get_jwt_config()?;
-
-    let token = user
-        .generate_jwt(&jwt_secret.secret, jwt_secret.expiration)
-        .or_else(|_| unauthorized("unauthorized!"))?;
+    let token = crate::auth::session::issue_token(&ctx, &user).await?;
 
     format::json(LoginResponse::new(&user, &token))
 }
@@ -232,10 +231,7 @@ async fn resend_verification_email(
     Json(params): Json<ResendVerificationParams>,
 ) -> Result<Response> {
     let Ok(user) = users::Model::find_by_email(&ctx.db, &params.email).await else {
-        tracing::info!(
-            email = params.email,
-            "User not found for resend verification"
-        );
+        tracing::info!("verification resend requested for unknown account");
         return format::json(());
     };
 
@@ -267,6 +263,7 @@ pub fn routes() -> Routes {
         .add("/forgot", post(forgot))
         .add("/reset", post(reset))
         .add("/current", get(current))
+        .add("/logout", post(logout))
         .add("/magic-link", post(magic_link))
         .add("/magic-link/{token}", get(magic_link_verify))
         .add("/resend-verification-mail", post(resend_verification_email))
