@@ -32,12 +32,16 @@ done
 
 # Refuse unexpected syntax rather than evaluating arbitrary dotenv content or
 # constructing an ambiguous connection URI.
-for value in "$DB_NAME" "$DB_USER" "$DB_PASSWORD" "$JWT_SECRET"; do
+for value in "$DB_NAME" "$DB_USER" "$DB_PASSWORD"; do
   if [[ ! "$value" =~ ^[A-Za-z0-9_-]+$ ]]; then
-    echo "Local .env contains a value with unsupported characters; use URL-safe values." >&2
+    echo "Database values in local .env must use URL-safe characters." >&2
     exit 1
   fi
 done
+if [[ ! "$JWT_SECRET" =~ ^[A-Za-z0-9+/=]+$ || ${#JWT_SECRET} -lt 80 ]]; then
+  echo "JWT_SECRET must be a strong Base64 value. Run bash scripts/dev-up.sh again." >&2
+  exit 1
+fi
 
 export DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}"
 export QUEUE_URL="$DATABASE_URL"
