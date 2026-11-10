@@ -7,11 +7,7 @@ VALUES (
   'Not assigned - placeholder only',
   'planned'
 )
-ON CONFLICT (code) DO UPDATE
-SET name = EXCLUDED.name,
-    location = EXCLUDED.location,
-    status = EXCLUDED.status,
-    updated_at = NOW();
+ON CONFLICT DO NOTHING;
 
 INSERT INTO compute_offerings (
   id, region_id, code, name, capability_key,
@@ -26,12 +22,4 @@ SELECT
   1, 1024, 10, 'example-image-not-available', 'unverified'
 FROM regions
 WHERE code = 'example-unverified'
-ON CONFLICT (region_id, code) DO UPDATE
-SET name = EXCLUDED.name,
-    capability_key = EXCLUDED.capability_key,
-    vcpu_count = EXCLUDED.vcpu_count,
-    memory_mib = EXCLUDED.memory_mib,
-    storage_gib = EXCLUDED.storage_gib,
-    image_id = EXCLUDED.image_id,
-    status = EXCLUDED.status,
-    updated_at = NOW();
+ON CONFLICT DO NOTHING;
