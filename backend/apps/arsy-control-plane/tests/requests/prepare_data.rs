@@ -30,7 +30,7 @@ pub async fn init_user_login(request: &TestServer, ctx: &AppContext) -> LoggedIn
         "token": user.email_verification_token,
     });
 
-    requestrequest
+    request
         .get(&format!("/api/v1/auth/verify/{}", verify_payload["token"].as_str().unwrap()))
         .await;
 
