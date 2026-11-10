@@ -260,7 +260,7 @@ async fn resend_verification_email(
 
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("/api/auth")
+        .prefix("/api/v1/auth")
         .add("/register", post(register))
         .add("/verify/{token}", get(verify))
         .add("/login", post(login))
