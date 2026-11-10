@@ -33,8 +33,6 @@ jobs:
   frontend:
     name: Lint, type-check, and build Next.js apps
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,20 +45,7 @@ jobs:
           node-version-file: .node-version
       - name: Install dependencies
         working-directory: frontend
-        run: pnpm install --no-frozen-lockfile
-      - name: Commit resolved workspace lockfile on same-repository PRs
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/pnpm-lock.yaml
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: pin frontend dependency lockfile"
-            git push origin "HEAD:${HEAD_REF}"
-          fi
+        run: pnpm install --frozen-lockfile
       - name: Verify frozen dependency resolution
         working-directory: frontend
         run: pnpm install --frozen-lockfile
