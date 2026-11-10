@@ -1,22 +1,24 @@
 name: Generate Loco Control Plane (P0-02)
 
 on:
-  push:
+  pull_request:
     branches:
-      - p0-02-loco-generate
+      - main
     paths:
-      - .github/workflows/p0-02-generate-loco.yml
       - scripts/generate-control-plane.sh
+      - .github/workflows/p0-02-generate-loco.yml
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
-  group: p0-02-loco-generation
+  group: p0-02-loco-generation-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   generate:
+    if: github.head_ref == 'p0-02-loco-generate'
     name: Generate and verify official Loco app
     runs-on: ubuntu-latest
     services:
@@ -34,8 +36,10 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     steps:
-      - name: Checkout
+      - name: Checkout the pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Install the pinned Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -76,4 +80,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "build(backend): generate Loco control plane app (P0-02)"
-          git push origin HEAD:p0-02-loco-generate
+          git push origin HEAD:${{ github.head_ref }}
