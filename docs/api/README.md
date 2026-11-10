@@ -6,9 +6,15 @@ All ARSY-owned REST API routes live under `/api/v1`. The OpenAPI root declares `
 
 The first application routes are mounted at:
 
-- `/api/v1/auth/*`: the existing Loco authentication handlers.
+- `/api/v1/auth/*`: account registration, verification, login, logout, password recovery, magic links, and current-user handlers. Login and magic-link exchange issue JWTs backed by persisted sessions.
 - `/api/v1/health/ready`: readiness for the required PostgreSQL dependency.
 - `/_ping`: Loco's built-in process liveness response (`{"ok":true}`).
+
+## Authentication sessions
+
+Every issued JWT carries a random `sid` claim and has a matching PostgreSQL `auth_sessions` row. The token is returned only after the session row has been persisted. Protected handlers must use Loco's JWT extractor and then call `crate::auth::session::require_active_session`; a valid signature alone is not sufficient. Logout revokes only the presented session. Password reset revokes all active sessions before changing the password. Missing, expired, revoked, and unknown sessions fail closed with HTTP 401.
+
+The first release invalidates older stateless JWTs that do not contain a persisted `sid`. Clients must sign in again after deployment rather than retaining credentials that cannot be revoked server-side.
 
 ## OpenAPI source and artifact
 

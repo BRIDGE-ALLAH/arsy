@@ -26,10 +26,14 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
+## Authentication sessions
+
+Login and magic-link exchange issue JWTs backed by PostgreSQL session rows. Logout revokes the current session; password reset revokes every active session for the account. Protected handlers must call `crate::auth::session::require_active_session` after Loco's JWT extractor.
+
 ## Health endpoints
 
 - `GET /_ping`: Loco built-in liveness endpoint; reports that the HTTP process is responsive.
-- `GET /api/health/ready`: runs a lightweight `SELECT 1` against PostgreSQL. Returns `200 { "status": "ready" }` only when the required database responds, or `503 { "status": "not_ready" }` without exposing dependency details.
+- `GET /api/v1/health/ready`: runs a lightweight `SELECT 1` against PostgreSQL. Returns `200 { "status": "ready" }` only when the required database responds, or `503 { "status": "not_ready" }` without exposing dependency details.
 
 ## Rules
 

@@ -1,4 +1,9 @@
-use arsy_control_plane::{app::App, models::users};
+use arsy_control_plane::{
+    app::App,
+    models::{_entities::auth_sessions, users},
+};
+use chrono::{Duration, Utc};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 use insta::{assert_debug_snapshot, with_settings};
 use loco_rs::testing::prelude::*;
 use serial_test::serial;
@@ -35,6 +40,19 @@ async fn can_register() {
             200,
             "Register request should succeed"
         );
+
+        // Duplicate registration must not replace the existing identity or send
+        // another welcome email.
+        let duplicate_response = request
+            .post("/api/v1/auth/register")
+            .json(&serde_json::json!({
+                "name": "attacker-controlled replacement",
+                "email": email,
+                "password": "different-password"
+            }))
+            .await;
+        assert_eq!(duplicate_response.status_code(), 200);
+
         let saved_user = users::Model::find_by_email(&ctx.db, email)
             .await
             .expect("registration should have persisted a user");
@@ -235,6 +253,14 @@ async fn can_reset_password() {
     request::<App, _, _>(|request, ctx| async move {
         let login_data = prepare_data::init_user_login(&request, &ctx).await;
 
+        let (old_auth_key, old_auth_value) =
+            prepare_data::auth_header(&login_data.token);
+        let old_session = request
+            .get("/api/v1/auth/current")
+            .add_header(old_auth_key.clone(), old_auth_value.clone())
+            .await;
+        assert_eq!(old_session.status_code(), 200);
+
         let forgot_payload = serde_json::json!({
             "email": login_data.user.email,
         });
@@ -278,6 +304,12 @@ async fn can_reset_password() {
         assert!(user.reset_token.is_none());
         assert!(user.reset_sent_at.is_none());
 
+        let invalidated_session = request
+            .get("/api/v1/auth/current")
+            .add_header(old_auth_key, old_auth_value)
+            .await;
+        assert_eq!(invalidated_session.status_code(), 401);
+
         assert_debug_snapshot!(reset_response.text());
 
         let login_response = request
@@ -307,6 +339,42 @@ async fn can_reset_password() {
 
 #[tokio::test]
 #[serial]
+async fn protected_current_route_rejects_missing_credentials() {
+    request::<App, _, _>(|request, _ctx| async move {
+        let response = request.get("/api/v1/auth/current").await;
+        assert_eq!(response.status_code(), 401);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn protected_current_route_rejects_expired_persisted_session() {
+    request::<App, _, _>(|request, ctx| async move {
+        let user = prepare_data::init_user_login(&request, &ctx).await;
+        let session = auth_sessions::Entity::find()
+            .filter(auth_sessions::Column::UserId.eq(user.user.id))
+            .one(&ctx.db)
+            .await
+            .expect("query session")
+            .expect("login created a session");
+
+        let mut active: auth_sessions::ActiveModel = session.into();
+        active.expires_at = Set(Utc::now().fixed_offset() - Duration::minutes(1));
+        active.update(&ctx.db).await.expect("expire persisted session");
+
+        let (key, value) = prepare_data::auth_header(&user.token);
+        let response = request
+            .get("/api/v1/auth/current")
+            .add_header(key, value)
+            .await;
+        assert_eq!(response.status_code(), 401);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
 async fn can_get_current_user() {
     configure_insta!();
 
@@ -330,6 +398,34 @@ async fn can_get_current_user() {
         }, {
             assert_debug_snapshot!((response.status_code(), response.text()));
         });
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn logout_revokes_the_persisted_session() {
+    request::<App, _, _>(|request, ctx| async move {
+        let user = prepare_data::init_user_login(&request, &ctx).await;
+        let (auth_key, auth_value) = prepare_data::auth_header(&user.token);
+
+        let before_logout = request
+            .get("/api/v1/auth/current")
+            .add_header(auth_key.clone(), auth_value.clone())
+            .await;
+        assert_eq!(before_logout.status_code(), 200);
+
+        let logout_response = request
+            .post("/api/v1/auth/logout")
+            .add_header(auth_key.clone(), auth_value.clone())
+            .await;
+        assert_eq!(logout_response.status_code(), 200);
+
+        let after_logout = request
+            .get("/api/v1/auth/current")
+            .add_header(auth_key, auth_value)
+            .await;
+        assert_eq!(after_logout.status_code(), 401);
     })
     .await;
 }
