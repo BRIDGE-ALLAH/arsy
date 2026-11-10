@@ -67,7 +67,7 @@ The generated application is committed under `backend/apps/arsy-control-plane`. 
 bash scripts/dev-backend.sh
 ```
 
-The launcher reads only the expected URL-safe variables from the ignored local `.env` file and exports `DATABASE_URL`, `QUEUE_URL`, and `JWT_SECRET` for the process. Development config has no fallback database URI or JWT signing secret. The development mailer is stubbed so local auth flows do not require an SMTP server.
+The launcher reads the expected variables from the ignored local `.env` file, validates URL-safe database values and a Base64 JWT signing secret, then exports `DATABASE_URL`, `QUEUE_URL`, and `JWT_SECRET` for the process. Development config has no fallback database URI or JWT signing secret. The development mailer is stubbed so local auth flows do not require an SMTP server.
 
 The built-in monitoring endpoints are:
 
