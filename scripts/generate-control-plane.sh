@@ -21,7 +21,7 @@ if [[ -e "$app_dir" ]]; then
   exit 1
 fi
 
-loco new \
+loco --log DEBUG new \
   --name arsy-control-plane \
   --path "$parent_dir" \
   --db postgres \
