@@ -135,6 +135,19 @@ paths:
       responses:
         "200":
           description: Reset request handled.
+  /api/v1/auth/logout:
+    post:
+      tags: [Authentication]
+      operationId: logoutUser
+      summary: Revoke the current persisted authentication session
+      description: Invalidates the server-side session. The corresponding JWT is rejected by protected routes from this point onward.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current session revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/v1/auth/current:
     get:
       tags: [Authentication]
