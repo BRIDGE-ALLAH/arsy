@@ -1,0 +1,65 @@
+name: Architecture decision
+description: Propose or record a material ARSY architecture or technology decision.
+title: "[ADR] Short decision statement"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use an ADR for durable architectural choices. Review `docs/MASTER_BLUEPRINT.md`, existing ADRs, and `docs/SECURITY.md` before proposing a change.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and problem
+      description: What problem, constraint, or trade-off requires a decision?
+    validations:
+      required: true
+  - type: textarea
+    id: drivers
+    attributes:
+      label: Decision drivers and constraints
+      description: Include security, tenant isolation, reliability, operability, cost, portability, and team/tooling constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considered
+      description: Compare viable alternatives and their trade-offs. Include the status quo or deferral option when relevant.
+      placeholder: |
+        1. Option A — benefits / costs / risks
+        2. Option B — benefits / costs / risks
+        3. Defer — consequences
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed decision
+      description: State the choice precisely. Distinguish decision from implementation plan.
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences
+      description: Positive, negative, security, compatibility, migration, operational, and future reversal consequences.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Evidence and validation plan
+      description: Benchmarks, threat-model checks, prototype, migration rehearsal, failure test, or acceptance evidence required.
+    validations:
+      required: true
+  - type: checkboxes
+    id: adr_checks
+    attributes:
+      label: Review checks
+      options:
+        - label: Alternatives and trade-offs are documented.
+          required: true
+        - label: Security and tenant-isolation implications are included.
+          required: true
+        - label: No implementation has been implied as complete by this proposal.
+          required: true
