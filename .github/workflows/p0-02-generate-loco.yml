@@ -68,7 +68,7 @@ jobs:
         env:
           PGPASSWORD: loco
         run: |
-          for db in arsy_control_plane_development arsy_control_plane_test; do
+          for db in arsy-control-plane_development arsy-control-plane_test; do
             createdb --host 127.0.0.1 --username loco "$db" || true
           done
           cargo test --manifest-path backend/apps/arsy-control-plane/Cargo.toml --locked
