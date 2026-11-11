@@ -1,31 +1,39 @@
 # ARSY Backend
 
-The backend is a Rust codebase. The first application is the Loco.rs Control Plane API.
+The backend is a Rust workspace. The first application is the Loco.rs Control Plane API, with a PostgreSQL-backed durable worker queue.
 
-## Scaffold the Control Plane
+## Workspace layout
 
-Prerequisites: stable Rust toolchain, Cargo, PostgreSQL (provided locally through scripts/dev-up.sh), and the Loco/SeaORM CLIs.
+- `apps/arsy-control-plane/`: Loco.rs API and application runtime.
+- `apps/arsy-control-plane/migration/`: SeaORM migrations.
+- `Cargo.toml`: workspace root and shared dependency declarations.
+
+## Development
+
+Prerequisites: stable Rust toolchain (see `rust-toolchain.toml`), Cargo, and PostgreSQL (start the local database with `./scripts/dev-up.sh` from the repository root).
 
 From the repository root:
 
-~~~bash
-cargo install loco
-cargo install sea-orm-cli
-loco new \
-  --path backend/apps/arsy-control-plane \
-  --name arsy_control_plane \
-  --db postgres \
-  --bg queue-postgres \
-  --assets none \
-  --allow-in-git-repo
-~~~
+```bash
+cd backend
+cargo fmt --all
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+```
 
-The command uses Loco's official generator for a database-backed JSON API and PostgreSQL-backed durable worker queue. Review the generated configuration before connecting it to any non-local database.
+Run the API from the application directory after configuring its database URL:
 
-## Rules
+```bash
+cd backend/apps/arsy-control-plane
+DATABASE_URL='postgres://<user>:<password>@localhost:5432/<database>' cargo run --bin arsy_control_plane-cli -- start
+```
 
-- Keep controllers thin.
-- Place business use cases outside HTTP handlers.
+Never put a real database password in shell history, documentation, or committed files. Use a local environment file with restrictive permissions.
+
+## Architecture rules
+
+- Keep controllers thin; place business use cases outside HTTP handlers.
 - Do not put provider SDK calls directly in controllers.
 - Persist operations before dispatching external side effects.
 - Keep secrets out of logs and source control.
@@ -33,4 +41,4 @@ The command uses Loco's official generator for a database-backed JSON API and Po
 
 ## Status
 
-The app scaffold has not yet been generated or compiled in this repository. The command above is the Phase 0 implementation entry point.
+The Loco application scaffold exists. Domain modules, production authentication/authorization, provisioning workflows, and the broader control-plane capabilities remain in phased implementation.
