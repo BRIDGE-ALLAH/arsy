@@ -1,0 +1,45 @@
+name: Engineering task
+description: Propose a scoped engineering task
+title: "[TASK] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "For planned work, check the [ARSY engineering tracker](https://github.com/BRIDGE-ALLAH/arsy/issues/1) first."
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What verifiable outcome should this task deliver?
+      placeholder: A user or operator can...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and source of truth
+      description: Link relevant docs, ADRs, issues, and constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List included work and explicit non-goals.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use observable, testable checkboxes.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Tests and verification
+      description: What commands, tests, or operational checks prove completion?
+    validations:
+      required: true
