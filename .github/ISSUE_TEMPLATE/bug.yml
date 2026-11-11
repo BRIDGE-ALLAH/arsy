@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible defect
+title: "[BUG] "
+labels: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact and affected scope
+      description: Who is affected, severity, frequency, and whether tenant or security boundaries are involved.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and versions
+      description: Include OS, deployment mode, commit/version, and relevant component versions. Do not include secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove credentials, tokens, personal data, and secret values before posting.
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression test idea
+      description: What automated test would prevent this defect from returning?

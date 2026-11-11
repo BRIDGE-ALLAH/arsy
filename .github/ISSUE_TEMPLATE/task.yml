@@ -1,0 +1,66 @@
+name: Engineering task
+description: Propose a scoped engineering task
+title: "[TASK] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "For planned work, check the [ARSY engineering tracker](https://github.com/BRIDGE-ALLAH/arsy/issues/1) first. Split large work into independent tasks and use a stable phase ID (for example P2-01)."
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What verifiable outcome should this task deliver?
+      placeholder: A user or operator can...
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source of truth
+      description: Link relevant product docs, architecture docs, ADRs, and issues.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Narrow scope
+      description: List included work and keep this task independently deliverable.
+    validations:
+      required: true
+  - type: textarea
+    id: design_security
+    attributes:
+      label: Design and security rules
+      description: State architecture constraints, tenant boundaries, permissions, secrets, and threat considerations.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List blocking issue IDs; use "None" if there are no dependencies.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use observable, testable checkboxes.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Tests and verification
+      description: What commands, tests, or operational checks prove completion?
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Explicitly list what this task must not implement.
+    validations:
+      required: true
