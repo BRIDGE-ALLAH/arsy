@@ -30,6 +30,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: impact
+    attributes:
+      label: Impact and affected scope
+      description: Who is affected, severity, frequency, and whether tenant or security boundaries are involved.
+    validations:
+      required: true
+  - type: textarea
     id: environment
     attributes:
       label: Environment and versions
@@ -41,3 +48,8 @@ body:
     attributes:
       label: Sanitized logs
       description: Remove credentials, tokens, personal data, and secret values before posting.
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression test idea
+      description: What automated test would prevent this defect from returning?
