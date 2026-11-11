@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "apps/arsy-control-plane",
+  "apps/arsy-control-plane/migration",
+]
+resolver = "2"
+
+[workspace.dependencies]
+loco-rs = { version = "1.3", default-features = false }
