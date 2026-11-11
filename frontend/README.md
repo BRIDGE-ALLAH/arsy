@@ -1,37 +1,30 @@
 # ARSY Frontend
 
-The planned customer console and public website use Next.js App Router and TypeScript.
+The frontend is a pnpm workspace. Customer-facing applications live under `frontend/apps/*`.
 
-## Applications
+## Console
 
-- apps/console: authenticated cloud management console.
-- apps/website: public product and documentation entry point.
+The Console is a Next.js App Router application using TypeScript and Tailwind CSS.
 
-## Shared packages (add as needed)
+From the repository root:
 
-- packages/ui: design-system components.
-- packages/api-client: generated or typed Control Plane API client.
-- packages/types: shared API and UI types.
-- packages/config: shared lint and TypeScript configuration.
+```bash
+corepack enable
+pnpm install
+cp frontend/apps/console/.env.example frontend/apps/console/.env.local
+pnpm dev:console
+```
 
-## Recommended stack
+Open http://localhost:3000.
 
-- Next.js App Router + TypeScript
-- Tailwind CSS + shadcn/ui
-- TanStack Query for remote state
-- Zustand only for local client-owned state
-- React Hook Form + Zod
-- Apache ECharts for metrics
-- pnpm
+Useful checks:
 
-## Rules
+```bash
+pnpm lint:console
+pnpm typecheck:console
+pnpm build:console
+```
 
-- Backend authorization is authoritative; hiding a UI action is not security.
-- Never store provider credentials in browser storage.
-- Prefer generated OpenAPI types once the API contract stabilizes.
-- Keep server components for server-rendered data and client components for interactive controls.
-- Add accessible loading, empty, error, and permission-denied states.
+Set `NEXT_PUBLIC_ARSY_API_BASE_URL` to the versioned Control Plane API base URL when connecting API-backed features. Do not put secrets in `NEXT_PUBLIC_*` variables; they are exposed to browser code.
 
-## Status
-
-The Next.js applications are planned but have not yet been scaffolded or built in this repository.
+The current Console is an early scaffold and contains no production authentication, tenant data, or infrastructure operations. Do not use it to manage production workloads.
